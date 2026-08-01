@@ -177,7 +177,7 @@
         <div class="field"><label>Staff ID / Employee ID *</label><input type="text" id="f-empid" placeholder="e.g. EMP-102" /></div>
         <div class="field"><label>Full Name *</label><input type="text" id="f-name" placeholder="e.g. Ahmed Raza" /></div>
         <div class="field"><label>Designation / Role *</label><input type="text" id="f-designation" placeholder="e.g. Site Engineer" /></div>
-        <div class="field"><label>Department / Site Location</label><input type="text" id="f-dept" placeholder="e.g. DHA Phase 6 Site" /></div>
+        <div class="field"><label>Department / Site Location</label><input type="text" id="f-dept" placeholder="e.g. SFSL Site" /></div>
         <div class="field"><label>Appraiser Name *</label><input type="text" id="f-appraiser" placeholder="Your name" /></div>
         <div class="field"><label>Appraiser Designation</label><input type="text" id="f-appraiser-desig" placeholder="e.g. Project Manager" /></div>
       </div>
@@ -323,7 +323,7 @@
     document.getElementById("dash-authed").style.display = "none";
   });
 
-  // Dynamic Competencies Rendering (With Hyphen-to-Underscore Fallback)
+  // Dynamic Competencies Rendering
   var compContainer = document.getElementById("comp-container");
   document.getElementById("f-role").addEventListener("change", function(e){
     var rawValue = e.target.value;
@@ -362,16 +362,24 @@
     }
 
     var group = COMPETENCIES[roleKey];
-    var scores = [];
+    var scoresObj = {};
+    var scoresArr = [];
+    
     if(group){
       group.items.forEach(function(item){
         var checked = document.querySelector('input[name="score_'+item.key+'"]:checked');
-        if(checked) scores.push(parseInt(checked.value, 10));
+        var val = checked ? parseInt(checked.value, 10) : 0;
+        scoresObj[item.name] = val;
+        if(val) scoresArr.push(val);
       });
     }
 
-    var avg = scores.length ? scores.reduce(function(a,b){ return a+b; }, 0) / scores.length : 3.0;
+    var avg = scoresArr.length ? scoresArr.reduce(function(a,b){ return a+b; }, 0) / scoresArr.length : 3.0;
     var recEl = document.querySelector('input[name="f-rec"]:checked');
+
+    var achievementsText = document.getElementById("f-achievements").value.trim();
+    var improvementText = document.getElementById("f-improvement").value.trim();
+    var trainingText = document.getElementById("f-training").value.trim();
 
     var record = {
       id: "appraisal_" + Date.now(),
@@ -379,10 +387,12 @@
       employee: { empid: empid, name: name, designation: designation, department: document.getElementById("f-dept").value.trim() },
       appraiser: { name: appraiser, designation: document.getElementById("f-appraiser-desig").value.trim() },
       role_group: roleKey,
+      competency_scores: scoresObj,
       average_score: Math.round(avg * 100) / 100,
-      achievements: document.getElementById("f-achievements").value.trim(),
-      improvement: document.getElementById("f-improvement").value.trim(),
-      training: document.getElementById("f-training").value.trim(),
+      achievements: achievementsText || "None entered",
+      improvement: improvementText || "None entered",
+      improvements: improvementText || "None entered", // Dual key fallback
+      training: trainingText || "None entered",
       recommendation: recEl ? recEl.value : "N/A"
     };
 
@@ -430,7 +440,7 @@
 
         keys.forEach(function(id){
           if(grouped[id].reviews.length > 1) multiCount++;
-          grouped[id].reviews.forEach(function(r){ totalScores += r.average_score; });
+          grouped[id].reviews.forEach(function(r){ totalScores += parseFloat(r.average_score || 0); });
         });
 
         document.getElementById("stat-total").textContent = keys.length;
@@ -443,7 +453,7 @@
         var html = '<table class="sub-table"><thead><tr><th>Staff ID</th><th>Employee</th><th>Appraisers</th><th>Combined Avg</th><th>Action</th></tr></thead><tbody>';
         keys.forEach(function(id){
           var g = grouped[id];
-          var totalAvg = g.reviews.reduce(function(a,b){ return a + parseFloat(b.average_score); }, 0) / g.reviews.length;
+          var totalAvg = g.reviews.reduce(function(a,b){ return a + parseFloat(b.average_score || 0); }, 0) / g.reviews.length;
           var appraiserNames = g.reviews.map(function(r){ return r.appraiser.name; }).join(", ");
 
           html += '<tr>' +
@@ -478,13 +488,31 @@
     var html = '<div style="margin-bottom:16px;"><strong>Designation:</strong> ' + group.designation + '</div>';
 
     group.reviews.forEach(function(r, idx){
+      var appraiserDesig = r.appraiser.designation ? ' (' + r.appraiser.designation + ')' : '';
       html += '<div class="feedback-card">' +
-        '<h4>Appraiser #' + (idx+1) + ': ' + r.appraiser.name + ' (' + (r.appraiser.designation || "N/A") + ')</h4>' +
-        '<div class="fb-field"><b>Score Given:</b> ' + r.average_score + ' / 5</div>' +
-        '<div class="fb-field"><b>Recommendation:</b> ' + r.recommendation + '</div>' +
-        '<div class="fb-field"><b>Key Achievements:</b> ' + (r.achievements || "None entered") + '</div>' +
-        '<div class="fb-field"><b>Areas for Improvement:</b> ' + (r.improvement || "None entered") + '</div>' +
-        '<div class="fb-field"><b>Training Needs:</b> ' + (r.training || "None entered") + '</div>' +
+        '<h4>Appraiser #' + (idx+1) + ': ' + r.appraiser.name + appraiserDesig + '</h4>' +
+        '<div class="fb-field"><b>Overall Score:</b> ' + r.average_score + ' / 5</div>';
+      
+      // Render Competency Breakdown Table if available
+      if(r.competency_scores && Object.keys(r.competency_scores).length > 0){
+        html += '<div style="margin: 10px 0; font-size:12px;"><b>Competency Breakdown:</b></div>' +
+                '<table style="width:100%; border-collapse:collapse; margin-bottom:10px; background:#fff; font-size:12px; border:1px solid var(--line-soft);">' +
+                '<thead><tr style="background:var(--ink); color:#fff;"><th style="padding:6px; text-align:left;">Competency</th><th style="padding:6px; text-align:center; width:60px;">Rating</th></tr></thead><tbody>';
+        for(var compName in r.competency_scores){
+          html += '<tr><td style="padding:5px 6px; border-bottom:1px solid var(--line-soft);">' + compName + '</td>' +
+                  '<td style="padding:5px 6px; border-bottom:1px solid var(--line-soft); text-align:center;"><b>' + r.competency_scores[compName] + ' / 5</b></td></tr>';
+        }
+        html += '</tbody></table>';
+      }
+
+      var achievementsVal = r.achievements && r.achievements !== "None entered" ? r.achievements : "None entered";
+      var improvementVal = (r.improvement && r.improvement !== "None entered") ? r.improvement : ((r.improvements && r.improvements !== "None entered") ? r.improvements : "None entered");
+      var trainingVal = r.training && r.training !== "None entered" ? r.training : "None entered";
+
+      html += '<div class="fb-field"><b>Recommendation:</b> ' + (r.recommendation || "N/A") + '</div>' +
+        '<div class="fb-field"><b>Key Achievements:</b> ' + achievementsVal + '</div>' +
+        '<div class="fb-field"><b>Areas for Improvement:</b> ' + improvementVal + '</div>' +
+        '<div class="fb-field"><b>Training Needs:</b> ' + trainingVal + '</div>' +
       '</div>';
     });
 
