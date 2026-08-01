@@ -279,7 +279,7 @@
 <script>
 (function(){
   // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE:
-  var SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxr5GpEVHZn9000IKgL89mS7EBAep3hs96sG2vKLhxYj3pX5cPFHfrrbr4ykS96GZmcqQ/exec"; 
+  var SHEET_API_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE"; 
 
   var COMPETENCIES = {
     site: { title: "Site Staff", items: [{ key:"technical_execution", name:"Technical Execution" }, { key:"hse_compliance", name:"HSE Compliance" }, { key:"attendance", name:"Attendance" }, { key:"teamwork", name:"Teamwork" }, { key:"problem_solving", name:"Problem Solving" }, { key:"reporting_accuracy", name:"Reporting Accuracy" }] },
@@ -349,6 +349,28 @@
     compContainer.appendChild(wrap);
   });
 
+  // Helper to dynamically locate text fields in appraiser records regardless of backend key format
+  function findFieldVal(obj, keywords) {
+    if (!obj || typeof obj !== 'object') return "None entered";
+    var keys = Object.keys(obj);
+    
+    // Direct search for matching keyword in object keys
+    for (var i = 0; i < keys.length; i++) {
+      var keyName = keys[i];
+      var cleanKey = keyName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      for (var j = 0; j < keywords.length; j++) {
+        var cleanKw = keywords[j].toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (cleanKey.indexOf(cleanKw) !== -1) {
+          var val = obj[keyName];
+          if (val && val !== "None entered" && String(val).trim() !== "") {
+            return String(val).trim();
+          }
+        }
+      }
+    }
+    return "None entered";
+  }
+
   // Submit to Google Sheets Central Database
   document.getElementById("btn-submit").addEventListener("click", function(){
     var empid = document.getElementById("f-empid").value.trim().toUpperCase();
@@ -377,9 +399,9 @@
     var avg = scoresArr.length ? scoresArr.reduce(function(a,b){ return a+b; }, 0) / scoresArr.length : 3.0;
     var recEl = document.querySelector('input[name="f-rec"]:checked');
 
-    var achievementsText = document.getElementById("f-achievements").value.trim();
-    var improvementText = document.getElementById("f-improvement").value.trim();
-    var trainingText = document.getElementById("f-training").value.trim();
+    var achievementsText = document.getElementById("f-achievements").value.trim() || "None entered";
+    var improvementText = document.getElementById("f-improvement").value.trim() || "None entered";
+    var trainingText = document.getElementById("f-training").value.trim() || "None entered";
 
     var record = {
       id: "appraisal_" + Date.now(),
@@ -389,10 +411,18 @@
       role_group: roleKey,
       competency_scores: scoresObj,
       average_score: Math.round(avg * 100) / 100,
-      achievements: achievementsText || "None entered",
-      improvement: improvementText || "None entered",
-      improvements: improvementText || "None entered", // Dual key fallback
-      training: trainingText || "None entered",
+      achievements: achievementsText,
+      // Pass all standard payload key variations for Apps Script compatibility
+      improvement: improvementText,
+      improvements: improvementText,
+      areas_for_improvement: improvementText,
+      areasForImprovement: improvementText,
+      "Areas for Improvement": improvementText,
+      "Key Areas for Improvement": improvementText,
+      training: trainingText,
+      training_needs: trainingText,
+      trainingNeeds: trainingText,
+      "Training Needs": trainingText,
       recommendation: recEl ? recEl.value : "N/A"
     };
 
@@ -428,9 +458,15 @@
         var multiCount = 0;
 
         raw.forEach(function(item){
-          var id = item.employee.empid;
+          var id = item.employee ? item.employee.empid : (item.empid || item["Staff ID"]);
+          if(!id) return;
           if(!grouped[id]){
-            grouped[id] = { empid: id, name: item.employee.name, designation: item.employee.designation, reviews: [] };
+            grouped[id] = { 
+              empid: id, 
+              name: item.employee ? item.employee.name : (item.name || item["Employee Name"]), 
+              designation: item.employee ? item.employee.designation : (item.designation || item["Designation"]), 
+              reviews: [] 
+            };
           }
           grouped[id].reviews.push(item);
         });
@@ -440,7 +476,7 @@
 
         keys.forEach(function(id){
           if(grouped[id].reviews.length > 1) multiCount++;
-          grouped[id].reviews.forEach(function(r){ totalScores += parseFloat(r.average_score || 0); });
+          grouped[id].reviews.forEach(function(r){ totalScores += parseFloat(r.average_score || r["Combined Avg"] || 0); });
         });
 
         document.getElementById("stat-total").textContent = keys.length;
@@ -453,8 +489,8 @@
         var html = '<table class="sub-table"><thead><tr><th>Staff ID</th><th>Employee</th><th>Appraisers</th><th>Combined Avg</th><th>Action</th></tr></thead><tbody>';
         keys.forEach(function(id){
           var g = grouped[id];
-          var totalAvg = g.reviews.reduce(function(a,b){ return a + parseFloat(b.average_score || 0); }, 0) / g.reviews.length;
-          var appraiserNames = g.reviews.map(function(r){ return r.appraiser.name; }).join(", ");
+          var totalAvg = g.reviews.reduce(function(a,b){ return a + parseFloat(b.average_score || b["Combined Avg"] || 0); }, 0) / g.reviews.length;
+          var appraiserNames = g.reviews.map(function(r){ return (r.appraiser && r.appraiser.name) ? r.appraiser.name : (r.appraiser_name || "Appraiser"); }).join(", ");
 
           html += '<tr>' +
             '<td><b>' + g.empid + '</b></td>' +
@@ -488,10 +524,13 @@
     var html = '<div style="margin-bottom:16px;"><strong>Designation:</strong> ' + group.designation + '</div>';
 
     group.reviews.forEach(function(r, idx){
-      var appraiserDesig = r.appraiser.designation ? ' (' + r.appraiser.designation + ')' : '';
+      var appraiserName = (r.appraiser && r.appraiser.name) ? r.appraiser.name : (r.appraiser_name || "Appraiser");
+      var appraiserDesig = (r.appraiser && r.appraiser.designation) ? ' (' + r.appraiser.designation + ')' : '';
+      var avgScore = r.average_score || r["Combined Avg"] || "3.0";
+
       html += '<div class="feedback-card">' +
-        '<h4>Appraiser #' + (idx+1) + ': ' + r.appraiser.name + appraiserDesig + '</h4>' +
-        '<div class="fb-field"><b>Overall Score:</b> ' + r.average_score + ' / 5</div>';
+        '<h4>Appraiser #' + (idx+1) + ': ' + appraiserName + appraiserDesig + '</h4>' +
+        '<div class="fb-field"><b>Overall Score:</b> ' + avgScore + ' / 5</div>';
       
       // Render Competency Breakdown Table if available
       if(r.competency_scores && Object.keys(r.competency_scores).length > 0){
@@ -505,11 +544,13 @@
         html += '</tbody></table>';
       }
 
-      var achievementsVal = r.achievements && r.achievements !== "None entered" ? r.achievements : "None entered";
-      var improvementVal = (r.improvement && r.improvement !== "None entered") ? r.improvement : ((r.improvements && r.improvements !== "None entered") ? r.improvements : "None entered");
-      var trainingVal = r.training && r.training !== "None entered" ? r.training : "None entered";
+      // Dynamic text discovery using multiple keyword search
+      var achievementsVal = findFieldVal(r, ["achieve"]);
+      var improvementVal = findFieldVal(r, ["improv", "area"]);
+      var trainingVal = findFieldVal(r, ["train", "develop"]);
+      var recVal = r.recommendation || findFieldVal(r, ["recommend"]) || "N/A";
 
-      html += '<div class="fb-field"><b>Recommendation:</b> ' + (r.recommendation || "N/A") + '</div>' +
+      html += '<div class="fb-field"><b>Recommendation:</b> ' + recVal + '</div>' +
         '<div class="fb-field"><b>Key Achievements:</b> ' + achievementsVal + '</div>' +
         '<div class="fb-field"><b>Areas for Improvement:</b> ' + improvementVal + '</div>' +
         '<div class="fb-field"><b>Training Needs:</b> ' + trainingVal + '</div>' +
