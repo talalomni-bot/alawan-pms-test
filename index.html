@@ -431,8 +431,16 @@
     var container = document.getElementById("dash-content");
     container.innerHTML = "<p>Fetching database entries...</p>";
 
-    fetch(SHEET_API_URL)
-      .then(function(res){ return res.json(); })
+  fetch(SHEET_API_URL, {
+  method: "GET",
+  redirect: "follow"
+})
+  .then(function(res){ 
+    if (!res.ok) {
+      throw new Error("HTTP error! Status: " + res.status);
+    }
+    return res.json(); 
+  })
       .then(function(raw){
         var grouped = {};
         var validScoresSum = 0;
