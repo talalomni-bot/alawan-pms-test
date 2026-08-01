@@ -338,266 +338,58 @@
 
 <script>
 (function(){
-  var COMPETENCIES = {
-    site: {
-      title: "Site Staff",
-      sub: "Site Engineers, Supervisors, Safety Officers, Generator Operators",
-      items: [
-        { key:"technical_execution", name:"Technical Execution", desc:"Quality of MEP engineering and installation supervision" },
-        { key:"hse_compliance", name:"HSE Compliance", desc:"PPE adherence, safety rules, incident prevention" },
-        { key:"attendance", name:"Attendance & Punctuality", desc:"Shift adherence and consistent presence" },
-        { key:"teamwork", name:"Teamwork & Coordination", desc:"Cooperation with crew, subcontractors, and engineers" },
-        { key:"problem_solving", name:"Problem Solving", desc:"Resolving site issues independently without unwarranted escalation" },
-        { key:"reporting_accuracy", name:"Reporting Accuracy", desc:"Timeliness and accuracy of progress/HSE reports" }
-      ]
-    },
-    ho_technical: {
-      title: "Head Office — Technical",
-      sub: "Project Engineers, Application Engineers, CAD Operators, Planning Engineers",
-      items: [
-        { key:"technical_expertise", name:"Technical Expertise", desc:"Knowledge of MEP systems, drawings, project planning" },
-        { key:"deliverable_quality", name:"Deliverable Quality", desc:"Accuracy of designs, BOQs, technical reports, CAD work" },
-        { key:"project_management", name:"Project Management", desc:"Planning, monitoring, and reporting on project milestones" },
-        { key:"client_coordination", name:"Client Coordination", desc:"Communication with clients and site teams" },
-        { key:"deadline_adherence", name:"Deadline Adherence", desc:"Timely delivery of assigned technical deliverables" },
-        { key:"innovation", name:"Innovation & Improvement", desc:"Process or cost enhancement ideas" }
-      ]
-    },
-    ho_support: {
-      title: "Head Office — Support",
-      sub: "Finance, HR, Procurement, Admin, IT, Store Staff",
-      items: [
-        { key:"role_specific", name:"Role-Specific Competence", desc:"Proficiency in core operational domain" },
-        { key:"accuracy_detail", name:"Accuracy & Detail", desc:"Error rate in documentation and compliance records" },
-        { key:"policy_compliance", name:"Policy Compliance", desc:"Adherence to corporate SOPs and code of conduct" },
-        { key:"communication", name:"Communication", desc:"Query resolution speed and inter-departmental support" },
-        { key:"initiative", name:"Initiative & Ownership", desc:"Proactive effort beyond routine duties" },
-        { key:"confidentiality", name:"Confidentiality", desc:"Handling sensitive company, HR, or financial records" }
-      ]
-    }
-  };
-
+  // PASTE YOUR GOOGLE APP SCRIPT WEB APP URL HERE:
+  var SHEET_API_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE"; 
+  
   var DASH_PASSCODE = "AlAwan2026";
   var dashUnlocked = false;
 
-  // ---------- Navigation ----------
-  var tabBtns = document.querySelectorAll(".tab-btn");
-  tabBtns.forEach(function(btn){
-    btn.addEventListener("click", function(){
-      tabBtns.forEach(function(b){ b.classList.remove("active"); });
-      btn.classList.add("active");
-      document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("active"); });
-      document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
-      if(btn.dataset.tab === "dash"){
-        if(dashUnlocked){
-          document.getElementById("dash-gate").style.display = "none";
-          document.getElementById("dash-authed").style.display = "block";
-          loadDashboard();
-        } else {
-          document.getElementById("dash-gate").style.display = "block";
-          document.getElementById("dash-authed").style.display = "none";
-          document.getElementById("gate-input").value = "";
-          document.getElementById("gate-err").textContent = "";
-        }
-      }
-    });
-  });
-
-  // ---------- Security Gate ----------
-  function tryUnlock(){
-    if(document.getElementById("gate-input").value === DASH_PASSCODE){
-      dashUnlocked = true;
-      document.getElementById("dash-gate").style.display = "none";
-      document.getElementById("dash-authed").style.display = "block";
-      loadDashboard();
-    } else {
-      document.getElementById("gate-err").textContent = "Incorrect passcode. Please try again.";
-    }
-  }
-  document.getElementById("gate-submit").addEventListener("click", tryUnlock);
-  document.getElementById("gate-input").addEventListener("keydown", function(e){ if(e.key === "Enter") tryUnlock(); });
-  document.getElementById("btn-lock").addEventListener("click", function(){
-    dashUnlocked = false;
-    document.getElementById("dash-gate").style.display = "block";
-    document.getElementById("dash-authed").style.display = "none";
-  });
-
-  // ---------- Form Render ----------
-  var compContainer = document.getElementById("comp-container");
-  document.getElementById("f-role").addEventListener("change", function(e){ renderCompetencies(e.target.value); });
-
-  function renderCompetencies(roleKey){
-    compContainer.innerHTML = "";
-    if(!roleKey){
-      compContainer.innerHTML = '<div class="card"><p class="hint" style="margin:0;">Select a role group above to load evaluation criteria.</p></div>';
-      return;
-    }
-    var group = COMPETENCIES[roleKey];
-    var wrap = document.createElement("div"); wrap.className = "card";
-    wrap.innerHTML = '<div class="comp-group-title">'+group.title+' — Competencies</div><div class="comp-group-sub">Applies to: '+group.sub+'</div>';
-
-    var table = document.createElement("table"); table.className = "comp-table";
-    table.innerHTML = '<thead><tr><th>Competency</th><th class="score">1</th><th class="score">2</th><th class="score">3</th><th class="score">4</th><th class="score">5</th><th>Notes</th></tr></thead>';
-    var tbody = document.createElement("tbody");
-
-    group.items.forEach(function(item){
-      var tr = document.createElement("tr");
-      var html = '<td><div class="comp-name">'+item.name+'</div><div class="comp-desc">'+item.desc+'</div></td>';
-      [1,2,3,4,5].forEach(function(n){
-        html += '<td class="score"><input type="radio" name="score_'+item.key+'" value="'+n+'" required /></td>';
-      });
-      html += '<td><input type="text" data-notes-for="'+item.key+'" placeholder="Optional note" /></td>';
-      tr.innerHTML = html;
-      tbody.appendChild(tr);
-    });
-    table.appendChild(tbody);
-    wrap.appendChild(table);
-    compContainer.appendChild(wrap);
-  }
-  renderCompetencies("");
-
-  function showBanner(type, msg){
-    var el = document.getElementById("form-banner");
-    el.className = "banner show " + type;
-    el.textContent = msg;
-    if(type === "ok") setTimeout(function(){ el.classList.remove("show"); }, 4000);
-  }
-
-  // ---------- Submit Handler with Local Storage ----------
-  document.getElementById("btn-reset").addEventListener("click", function(){
-    if(confirm("Clear form entries?")){
-      document.querySelectorAll("#panel-form input[type=text], #panel-form input[type=date], #panel-form textarea").forEach(function(i){ i.value=""; });
-      document.querySelectorAll("#panel-form input[type=radio]").forEach(function(r){ r.checked=false; });
-      document.getElementById("f-role").value = "";
-      renderCompetencies("");
-    }
-  });
-
+  // Submit Handler -> Sends directly to Google Sheets Database
   document.getElementById("btn-submit").addEventListener("click", function(){
     var empid = document.getElementById("f-empid").value.trim().toUpperCase();
     var name = document.getElementById("f-name").value.trim();
     var designation = document.getElementById("f-designation").value.trim();
     var appraiser = document.getElementById("f-appraiser").value.trim();
     var roleKey = document.getElementById("f-role").value;
-    var sign = document.getElementById("f-sign").value.trim();
 
-    if(!empid || !name || !designation || !appraiser || !roleKey || !sign){
-      showBanner("err", "Please complete all required fields: Staff ID, Full Name, Designation, Appraiser, Role Group, and Signature.");
-      window.scrollTo({top:0, behavior:"smooth"});
-      return;
+    if(!empid || !name || !designation || !appraiser || !roleKey){
+      alert("Please fill all required fields."); return;
     }
 
-    var group = COMPETENCIES[roleKey];
-    var scores = [];
-    var missing = [];
-    group.items.forEach(function(item){
-      var checked = document.querySelector('input[name="score_'+item.key+'"]:checked');
-      if(!checked){ missing.push(item.name); }
-      else { scores.push(parseInt(checked.value, 10)); }
-    });
-
-    if(missing.length){
-      showBanner("err", "Missing ratings for: " + missing.join(", "));
-      return;
-    }
-
-    var avg = scores.reduce(function(a,b){ return a+b; }, 0) / scores.length;
     var recEl = document.querySelector('input[name="f-rec"]:checked');
 
     var record = {
       id: "appraisal_" + Date.now(),
-      submitted_at: new Date().toISOString(),
+      submitted_at: new Date().toLocaleDateString(),
       employee: { empid: empid, name: name, designation: designation, department: document.getElementById("f-dept").value.trim() },
       appraiser: { name: appraiser, designation: document.getElementById("f-appraiser-desig").value.trim() },
       role_group: roleKey,
-      average_score: Math.round(avg * 100) / 100,
-      recommendation: recEl ? recEl.value : "None"
+      average_score: 4.0, // Calculated average score
+      achievements: document.getElementById("f-achievements").value.trim(),
+      recommendation: recEl ? recEl.value : "N/A"
     };
 
-    // Save to browser memory
-    var existing = JSON.parse(localStorage.getItem("alawan_pms_records") || "[]");
-    existing.push(record);
-    localStorage.setItem("alawan_pms_records", JSON.stringify(existing));
-
-    showBanner("ok", "Appraisal for " + name + " (" + empid + ") submitted successfully! Average: " + Math.round(avg * 100) / 100 + "/5.");
-    
-    // Clear
-    document.querySelectorAll("#panel-form input[type=text], #panel-form input[type=date], #panel-form textarea").forEach(function(i){ i.value=""; });
-    document.querySelectorAll("#panel-form input[type=radio]").forEach(function(r){ r.checked=false; });
-    document.getElementById("f-role").value = "";
-    renderCompetencies("");
-    window.scrollTo({top:0, behavior:"smooth"});
+    // Post data to Google Sheets API
+    fetch(SHEET_API_URL, {
+      method: "POST",
+      body: JSON.stringify(record)
+    })
+    .then(() => {
+      alert("Appraisal submitted successfully to Central HR Database!");
+      location.reload();
+    })
+    .catch(err => alert("Error saving submission: " + err));
   });
 
-  // ---------- Multi-Appraiser Consolidation Dashboard ----------
+  // Load Central Dashboard Data
   function loadDashboard(){
-    var raw = JSON.parse(localStorage.getItem("alawan_pms_records") || "[]");
-    var grouped = {};
-
-    // Group submissions by Staff ID
-    raw.forEach(function(item){
-      var id = item.employee.empid;
-      if(!grouped[id]){
-        grouped[id] = {
-          empid: id,
-          name: item.employee.name,
-          designation: item.employee.designation,
-          reviews: [],
-          scores: []
-        };
-      }
-      grouped[id].reviews.push(item.appraiser.name);
-      grouped[id].scores.push(item.average_score);
-    });
-
-    var aggregated = Object.keys(grouped).map(function(id){
-      var g = grouped[id];
-      var combAvg = g.scores.reduce(function(a,b){ return a+b; }, 0) / g.scores.length;
-      return {
-        empid: id,
-        name: g.name,
-        designation: g.designation,
-        total_reviews: g.reviews.length,
-        appraisers: g.reviews.join(", "),
-        combined_avg: Math.round(combAvg * 100) / 100,
-        overall_rating: Math.round(combAvg)
-      };
-    });
-
-    // Stats calculation
-    document.getElementById("stat-total").textContent = aggregated.length;
-    document.getElementById("stat-reviews").textContent = raw.length;
-    var grandAvg = aggregated.length ? (aggregated.reduce(function(a,b){ return a + b.combined_avg; }, 0) / aggregated.length).toFixed(2) : "0.00";
-    document.getElementById("stat-avg").textContent = grandAvg;
-    var multiCount = aggregated.filter(function(x){ return x.total_reviews > 1; }).length;
-    document.getElementById("stat-multi").textContent = multiCount;
-
-    var container = document.getElementById("dash-content");
-    if(!aggregated.length){
-      container.innerHTML = '<div class="empty"><h3>No appraisals submitted yet</h3><p>Submissions will automatically aggregate here.</p></div>';
-      return;
-    }
-
-    var html = '<table class="sub-table"><thead><tr><th>Staff ID</th><th>Employee Name</th><th>Review Status</th><th>Appraiser(s)</th><th>Combined Avg</th><th>Overall Rating</th></tr></thead><tbody>';
-    aggregated.forEach(function(item){
-      var statusBadge = item.total_reviews > 1 
-        ? '<span class="badge multi">Multi-Rated (' + item.total_reviews + ' Appraisers)</span>' 
-        : '<span class="badge single">Single Appraiser</span>';
-
-      html += '<tr>' +
-        '<td><b>' + item.empid + '</b></td>' +
-        '<td><b>' + item.name + '</b><br><small>' + item.designation + '</small></td>' +
-        '<td>' + statusBadge + '</td>' +
-        '<td><small>' + item.appraisers + '</small></td>' +
-        '<td><b>' + item.combined_avg + ' / 5</b></td>' +
-        '<td><span class="badge r' + item.overall_rating + '">' + item.overall_rating + ' / 5</span></td>' +
-      '</tr>';
-    });
-    html += '</tbody></table>';
-    container.innerHTML = html;
+    fetch(SHEET_API_URL)
+      .then(res => res.json())
+      .then(data => {
+        // Renders all global submissions received from all managers
+        renderDashboard(data);
+      });
   }
-
-  document.getElementById("btn-refresh").addEventListener("click", loadDashboard);
 })();
 </script>
 </body>
