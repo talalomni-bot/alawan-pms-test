@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <!-- html2pdf Library for Client-side PDF Generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     :root{
@@ -19,11 +18,6 @@
       --accent:#D98A3D;
       --accent-soft:#F5E3C8;
       --success:#3E7A4F;
-      --success-soft:#E1EEE3;
-      --danger:#B23A2E;
-      --danger-soft:#F5DEDA;
-      --warn:#C9962C;
-      --warn-soft:#F7ECD3;
       --radius:2px;
     }
     *{box-sizing:border-box;}
@@ -38,7 +32,7 @@
       min-height:100vh;
       -webkit-font-smoothing:antialiased;
     }
-    .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px;}
+    .wrap{max-width:1100px;margin:0 auto;padding:28px 20px 80px;}
 
     .titleblock{
       background:var(--ink);
@@ -130,13 +124,14 @@
     .sub-table th{background:var(--ink); color:#fff; text-align:left; padding:10px 10px; font-size:11px; text-transform:uppercase; font-family:'IBM Plex Mono', monospace;}
     .sub-table td{padding:11px 10px; border-top:1px solid var(--line-soft); font-size:13px;}
 
+    .badge-rec{display:inline-block; padding:3px 8px; background:var(--accent-soft); border:1px solid var(--accent); font-size:11px; font-weight:600; border-radius:2px;}
+
     .gate{max-width:380px; margin:60px auto; background:#fff; border:1px solid var(--line); padding:30px 28px; text-align:center;}
     .gate input{width:100%; text-align:center; font-family:'IBM Plex Mono', monospace; padding:11px 10px; border:1px solid var(--line); font-size:14px; margin-bottom:10px;}
 
-    /* ---------- Modal Styling for Feedback & PDF ---------- */
     .modal-overlay{position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(22, 35, 58, 0.7); display:none; justify-content:center; align-items:center; z-index:999; padding:20px;}
     .modal-overlay.active{display:flex;}
-    .modal{background:#fff; border:1px solid var(--line); width:100%; max-width:760px; max-height:85vh; overflow-y:auto; padding:24px; position:relative;}
+    .modal{background:#fff; border:1px solid var(--line); width:100%; max-width:780px; max-height:85vh; overflow-y:auto; padding:24px; position:relative;}
     .modal-header{display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:16px;}
     .modal-title{font-family:'Space Grotesk', sans-serif; font-size:20px; margin:0;}
     .close-modal{cursor:pointer; font-size:20px; font-weight:bold; background:none; border:none;}
@@ -144,6 +139,9 @@
     .feedback-card h4{margin:0 0 8px 0; font-size:14px; color:var(--ink); font-family:'Space Grotesk', sans-serif;}
     .fb-field{font-size:12.5px; margin-bottom:6px; line-height:1.4;}
     .fb-field b{color:var(--ink-soft);}
+
+    .summary-banner{background:var(--ink); color:#fff; padding:12px 16px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center;}
+    .summary-banner h4{margin:0; font-family:'Space Grotesk', sans-serif; font-size:15px; color:var(--accent);}
 
     footer{margin-top:60px; text-align:center; font-size:11px; color:var(--ink-soft); font-family:'IBM Plex Mono', monospace;}
   </style>
@@ -189,7 +187,6 @@
           <option value="ho_technical">Head Office — Technical</option>
           <option value="ho_support">Head Office — Support</option>
         </select>
-        <div style="font-size:12px; color:var(--ink-soft); margin-top:4px;">The competency criteria below adapts dynamically based on your selected role group.</div>
       </div>
     </div>
 
@@ -278,8 +275,8 @@
 
 <script>
 (function(){
-  // PASTE YOUR NEW GOOGLE APPS SCRIPT WEB APP URL HERE:
-  var SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw4RSqgPGBFex8pwqGZEf0P2CPx2PIRokuJwgTridCiKc1fgj5Tcp2NGcmUCXzfgUMrbQ/exec"; 
+  // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE:
+  var SHEET_API_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE"; 
 
   var COMPETENCIES = {
     site: { title: "Site Staff", items: [{ key:"technical_execution", name:"Technical Execution" }, { key:"hse_compliance", name:"HSE Compliance" }, { key:"attendance", name:"Attendance" }, { key:"teamwork", name:"Teamwork" }, { key:"problem_solving", name:"Problem Solving" }, { key:"reporting_accuracy", name:"Reporting Accuracy" }] },
@@ -323,7 +320,7 @@
     document.getElementById("dash-authed").style.display = "none";
   });
 
-  // Dynamic Competencies Rendering
+  // Dynamic Competencies
   var compContainer = document.getElementById("comp-container");
   document.getElementById("f-role").addEventListener("change", function(e){
     var rawValue = e.target.value;
@@ -349,28 +346,22 @@
     compContainer.appendChild(wrap);
   });
 
-  // Helper to dynamically locate text fields in appraiser records regardless of backend key format
-  function findFieldVal(obj, keywords) {
-    if (!obj || typeof obj !== 'object') return null;
-    var keys = Object.keys(obj);
-    
-    for (var i = 0; i < keys.length; i++) {
-      var keyName = keys[i];
-      var cleanKey = keyName.toLowerCase().replace(/[^a-z0-9]/g, '');
-      for (var j = 0; j < keywords.length; j++) {
-        var cleanKw = keywords[j].toLowerCase().replace(/[^a-z0-9]/g, '');
-        if (cleanKey.indexOf(cleanKw) !== -1) {
-          var val = obj[keyName];
-          if (val && val !== "None entered" && String(val).trim() !== "") {
-            return String(val).trim();
-          }
-        }
-      }
+  // Safe Property Fetching Helper
+  function getProp(obj, keys) {
+    if(!obj) return "";
+    for(var i=0; i<keys.length; i++){
+      if(obj[keys[i]] && String(obj[keys[i]]).trim() !== "") return String(obj[keys[i]]).trim();
     }
-    return null;
+    return "";
   }
 
-  // Submit to Google Sheets Central Database
+  // Safe Score Parser
+  function parseScore(val) {
+    var num = parseFloat(val);
+    return isNaN(num) ? 0 : num;
+  }
+
+  // Submit to Google Sheets
   document.getElementById("btn-submit").addEventListener("click", function(){
     var empid = document.getElementById("f-empid").value.trim().toUpperCase();
     var name = document.getElementById("f-name").value.trim();
@@ -398,29 +389,21 @@
     var avg = scoresArr.length ? scoresArr.reduce(function(a,b){ return a+b; }, 0) / scoresArr.length : 3.0;
     var recEl = document.querySelector('input[name="f-rec"]:checked');
 
-    var achievementsText = document.getElementById("f-achievements").value.trim() || "None entered";
-    var improvementText = document.getElementById("f-improvement").value.trim() || "None entered";
-    var trainingText = document.getElementById("f-training").value.trim() || "None entered";
-
     var record = {
       id: "appraisal_" + Date.now(),
       submitted_at: new Date().toLocaleDateString(),
-      employee: { empid: empid, name: name, designation: designation, department: document.getElementById("f-dept").value.trim() },
-      appraiser: { name: appraiser, designation: document.getElementById("f-appraiser-desig").value.trim() },
+      empid: empid,
+      name: name,
+      designation: designation,
+      department: document.getElementById("f-dept").value.trim(),
+      appraiser_name: appraiser,
+      appraiser_designation: document.getElementById("f-appraiser-desig").value.trim(),
       role_group: roleKey,
       competency_scores: scoresObj,
       average_score: Math.round(avg * 100) / 100,
-      achievements: achievementsText,
-      improvement: improvementText,
-      improvements: improvementText,
-      areas_for_improvement: improvementText,
-      areasForImprovement: improvementText,
-      "Areas for Improvement": improvementText,
-      "Key Areas for Improvement": improvementText,
-      training: trainingText,
-      training_needs: trainingText,
-      trainingNeeds: trainingText,
-      "Training Needs": trainingText,
+      achievements: document.getElementById("f-achievements").value.trim() || "None entered",
+      improvement: document.getElementById("f-improvement").value.trim() || "None entered",
+      training: document.getElementById("f-training").value.trim() || "None entered",
       recommendation: recEl ? recEl.value : "N/A"
     };
 
@@ -433,7 +416,7 @@
       body: JSON.stringify(record)
     })
     .then(function(){
-      alert("Appraisal submitted successfully to Central HR Database!");
+      alert("Appraisal submitted successfully!");
       location.reload();
     })
     .catch(function(err){
@@ -443,7 +426,7 @@
     });
   });
 
-  // Load All Submissions from Google Sheets API
+  // Load All Submissions
   function loadDashboard(){
     var container = document.getElementById("dash-content");
     container.innerHTML = "<p>Fetching database entries...</p>";
@@ -452,20 +435,35 @@
       .then(function(res){ return res.json(); })
       .then(function(raw){
         var grouped = {};
-        var totalScores = 0;
+        var validScoresSum = 0;
+        var validScoresCount = 0;
         var multiCount = 0;
 
         raw.forEach(function(item){
-          var id = item.employee ? item.employee.empid : (item.empid || item["Staff ID"] || item["Emp ID"]);
+          var id = getProp(item, ["empid", "Staff ID", "Emp ID", "ID"]);
           if(!id) return;
+
+          var empName = getProp(item, ["name", "Employee Name", "Full Name", "Employee"]);
+          var empDesig = getProp(item, ["designation", "Designation", "Role"]);
+
+          // Nested check fallback
+          if(!empName && item.employee && item.employee.name) empName = item.employee.name;
+          if(!empDesig && item.employee && item.employee.designation) empDesig = item.employee.designation;
+
           if(!grouped[id]){
             grouped[id] = { 
               empid: id, 
-              name: item.employee ? item.employee.name : (item.name || item["Employee Name"] || "Staff"), 
-              designation: item.employee ? item.employee.designation : (item.designation || item["Designation"] || "N/A"), 
+              name: empName !== "" ? empName : "Name Not Recorded", 
+              designation: empDesig !== "" ? empDesig : "Staff", 
               reviews: [] 
             };
+          } else {
+            // Update name if previously blank
+            if(grouped[id].name === "Name Not Recorded" && empName !== ""){
+              grouped[id].name = empName;
+            }
           }
+
           grouped[id].reviews.push(item);
         });
 
@@ -474,27 +472,47 @@
 
         keys.forEach(function(id){
           if(grouped[id].reviews.length > 1) multiCount++;
-          grouped[id].reviews.forEach(function(r){ totalScores += parseFloat(r.average_score || r["Average Score"] || r["Combined Avg"] || 0); });
+          grouped[id].reviews.forEach(function(r){
+            var scoreVal = parseScore(getProp(r, ["average_score", "Average Score", "Combined Avg", "Score"]));
+            if(scoreVal > 0) {
+              validScoresSum += scoreVal;
+              validScoresCount++;
+            }
+          });
         });
 
         document.getElementById("stat-total").textContent = keys.length;
         document.getElementById("stat-reviews").textContent = raw.length;
-        document.getElementById("stat-avg").textContent = raw.length ? (Math.round((totalScores / raw.length) * 100) / 100) : "–";
+        document.getElementById("stat-avg").textContent = validScoresCount ? (Math.round((validScoresSum / validScoresCount) * 100) / 100) : "–";
         document.getElementById("stat-multi").textContent = multiCount;
 
         if(!keys.length){ container.innerHTML = "<p>No submissions found in central database.</p>"; return; }
 
-        var html = '<table class="sub-table"><thead><tr><th>Staff ID</th><th>Employee</th><th>Appraisers</th><th>Combined Avg</th><th>Action</th></tr></thead><tbody>';
+        var html = '<table class="sub-table"><thead><tr><th>Staff ID</th><th>Employee Name & Designation</th><th>Appraisers</th><th>Combined Score</th><th>Latest Recommendation</th><th>Action</th></tr></thead><tbody>';
         keys.forEach(function(id){
           var g = grouped[id];
-          var totalAvg = g.reviews.reduce(function(a,b){ return a + parseFloat(b.average_score || b["Average Score"] || b["Combined Avg"] || 0); }, 0) / g.reviews.length;
-          var appraiserNames = g.reviews.map(function(r){ return (r.appraiser && r.appraiser.name) ? r.appraiser.name : (r.appraiser_name || r["Appraiser Name"] || "Appraiser"); }).join(", ");
+          
+          var sumScores = 0;
+          var countScores = 0;
+          g.reviews.forEach(function(r){
+            var s = parseScore(getProp(r, ["average_score", "Average Score", "Combined Avg", "Score"]));
+            if(s > 0){ sumScores += s; countScores++; }
+          });
+
+          var totalAvgStr = countScores > 0 ? (Math.round((sumScores / countScores) * 100) / 100) + " / 5" : "N/A";
+          
+          var appraiserNames = g.reviews.map(function(r){ 
+            return getProp(r, ["appraiser_name", "Appraiser Name"]) || (r.appraiser ? r.appraiser.name : "Appraiser"); 
+          }).join(", ");
+
+          var latestRec = getProp(g.reviews[g.reviews.length - 1], ["recommendation", "Recommendation"]) || "N/A";
 
           html += '<tr>' +
             '<td><b>' + g.empid + '</b></td>' +
-            '<td><b>' + g.name + '</b><br><small>' + g.designation + '</small></td>' +
+            '<td><b style="color:var(--ink); font-size:14px;">' + g.name + '</b><br><small style="color:var(--ink-soft);">' + g.designation + '</small></td>' +
             '<td><small>' + appraiserNames + ' (' + g.reviews.length + ')</small></td>' +
-            '<td><b>' + (Math.round(totalAvg * 100) / 100) + ' / 5</b></td>' +
+            '<td><b>' + totalAvgStr + '</b></td>' +
+            '<td><span class="badge-rec">' + latestRec + '</span></td>' +
             '<td><button class="btn small btn-view-fb" data-empid="' + g.empid + '">View Feedback &amp; PDF</button></td>' +
           '</tr>';
         });
@@ -506,11 +524,11 @@
         });
       })
       .catch(function(err){
-        container.innerHTML = "<p style='color:red;'>Failed to load database. Please ensure your Google Apps Script URL is correct and deployed to 'Anyone'.</p>";
+        container.innerHTML = "<p style='color:red;'>Failed to load database. Please ensure your Google Apps Script URL is deployed to 'Anyone'.</p>";
       });
   }
 
-  // Feedback Modal & PDF Export Logic
+  // Modal & Summary Display
   var modal = document.getElementById("feedback-modal");
   var activeEmpId = "";
 
@@ -519,16 +537,22 @@
     document.getElementById("modal-emp-title").textContent = "Appraisal Summary: " + group.name + " (" + empid + ")";
     var body = document.getElementById("modal-body-content");
     
-    var html = '<div style="margin-bottom:16px;"><strong>Designation:</strong> ' + group.designation + '</div>';
+    var latestRec = getProp(group.reviews[group.reviews.length - 1], ["recommendation", "Recommendation"]) || "N/A";
+
+    var html = '<div class="summary-banner">' +
+        '<div><strong>Employee:</strong> ' + group.name + ' | <strong>Designation:</strong> ' + group.designation + '</div>' +
+        '<div><h4>Final Rec: ' + latestRec + '</h4></div>' +
+      '</div>';
 
     group.reviews.forEach(function(r, idx){
-      var appraiserName = (r.appraiser && r.appraiser.name) ? r.appraiser.name : (r.appraiser_name || r["Appraiser Name"] || "Appraiser");
-      var appraiserDesig = (r.appraiser && r.appraiser.designation) ? ' (' + r.appraiser.designation + ')' : '';
-      var avgScore = r.average_score || r["Average Score"] || r["Combined Avg"] || "N/A";
+      var appraiserName = getProp(r, ["appraiser_name", "Appraiser Name"]) || (r.appraiser ? r.appraiser.name : "Appraiser");
+      var appraiserDesig = getProp(r, ["appraiser_designation", "Appraiser Designation"]) || (r.appraiser ? r.appraiser.designation : "");
+      var scoreVal = parseScore(getProp(r, ["average_score", "Average Score", "Combined Avg", "Score"]));
+      var scoreDisplay = scoreVal > 0 ? scoreVal + " / 5" : "N/A";
 
       html += '<div class="feedback-card">' +
-        '<h4>Appraiser #' + (idx+1) + ': ' + appraiserName + appraiserDesig + '</h4>' +
-        '<div class="fb-field"><b>Overall Score:</b> ' + avgScore + ' / 5</div>';
+        '<h4>Appraiser #' + (idx+1) + ': ' + appraiserName + (appraiserDesig ? ' (' + appraiserDesig + ')' : '') + '</h4>' +
+        '<div class="fb-field"><b>Overall Score:</b> ' + scoreDisplay + '</div>';
       
       if(r.competency_scores && Object.keys(r.competency_scores).length > 0){
         html += '<div style="margin: 10px 0; font-size:12px;"><b>Competency Breakdown:</b></div>' +
@@ -541,13 +565,12 @@
         html += '</tbody></table>';
       }
 
-      // Explicit property check followed by multi-keyword fuzzy extraction
-      var achievementsVal = r.achievements || r["Key Achievements"] || findFieldVal(r, ["achieve"]) || "None entered";
-      var improvementVal = r.improvement || r["Areas for Improvement"] || r.improvements || r.areas_for_improvement || findFieldVal(r, ["improv", "area"]) || "None entered";
-      var trainingVal = r.training || r["Training Needs"] || r.training_needs || findFieldVal(r, ["train", "develop"]) || "None entered";
-      var recVal = r.recommendation || r["Recommendation"] || findFieldVal(r, ["recommend"]) || "N/A";
+      var recVal = getProp(r, ["recommendation", "Recommendation"]) || "N/A";
+      var achievementsVal = getProp(r, ["achievements", "Key Achievements"]) || "None entered";
+      var improvementVal = getProp(r, ["improvement", "Areas for Improvement", "improvements"]) || "None entered";
+      var trainingVal = getProp(r, ["training", "Training Needs", "training_needs"]) || "None entered";
 
-      html += '<div class="fb-field"><b>Recommendation:</b> ' + recVal + '</div>' +
+      html += '<div class="fb-field"><b>Recommendation:</b> <mark style="background:var(--accent-soft); padding:2px 4px;">' + recVal + '</mark></div>' +
         '<div class="fb-field"><b>Key Achievements:</b> ' + achievementsVal + '</div>' +
         '<div class="fb-field"><b>Areas for Improvement:</b> ' + improvementVal + '</div>' +
         '<div class="fb-field"><b>Training Needs:</b> ' + trainingVal + '</div>' +
@@ -561,7 +584,6 @@
   document.getElementById("close-modal").addEventListener("click", function(){ modal.classList.remove("active"); });
   document.getElementById("btn-close-modal").addEventListener("click", function(){ modal.classList.remove("active"); });
 
-  // PDF Generation Trigger
   document.getElementById("btn-download-pdf").addEventListener("click", function(){
     var element = document.getElementById("pdf-container");
     var opt = {
