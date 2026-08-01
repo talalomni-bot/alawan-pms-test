@@ -183,12 +183,13 @@
       </div>
       <div class="field">
         <label>Role Group *</label>
-       <select id="f-role">
-  <option value="">Select role group…</option>
-  <option value="site">Site Staff</option>
-  <option value="ho_technical">Head Office — Technical</option>
-  <option value="ho_support">Head Office — Support</option>
+        <select id="f-role">
+          <option value="">Select role group…</option>
+          <option value="site">Site Staff</option>
+          <option value="ho_technical">Head Office — Technical</option>
+          <option value="ho_support">Head Office — Support</option>
         </select>
+        <div style="font-size:12px; color:var(--ink-soft); margin-top:4px;">The competency criteria below adapts dynamically based on your selected role group.</div>
       </div>
     </div>
 
@@ -277,7 +278,7 @@
 
 <script>
 (function(){
-  // REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL:
+  // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE:
   var SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxr5GpEVHZn9000IKgL89mS7EBAep3hs96sG2vKLhxYj3pX5cPFHfrrbr4ykS96GZmcqQ/exec"; 
 
   var COMPETENCIES = {
@@ -322,12 +323,15 @@
     document.getElementById("dash-authed").style.display = "none";
   });
 
-  // Dynamic Competencies Rendering
+  // Dynamic Competencies Rendering (With Hyphen-to-Underscore Fallback)
   var compContainer = document.getElementById("comp-container");
   document.getElementById("f-role").addEventListener("change", function(e){
-    var roleKey = e.target.value;
+    var rawValue = e.target.value;
+    var roleKey = rawValue.replace("-", "_");
+    
     compContainer.innerHTML = "";
-    if(!roleKey) return;
+    if(!roleKey || !COMPETENCIES[roleKey]) return;
+
     var group = COMPETENCIES[roleKey];
     var wrap = document.createElement("div"); wrap.className = "card";
     var table = document.createElement("table"); table.className = "comp-table";
@@ -340,7 +344,9 @@
       tr.innerHTML = html;
       tbody.appendChild(tr);
     });
-    table.appendChild(tbody); wrap.appendChild(table); compContainer.appendChild(wrap);
+    table.appendChild(tbody); 
+    wrap.appendChild(table); 
+    compContainer.appendChild(wrap);
   });
 
   // Submit to Google Sheets Central Database
@@ -349,7 +355,7 @@
     var name = document.getElementById("f-name").value.trim();
     var designation = document.getElementById("f-designation").value.trim();
     var appraiser = document.getElementById("f-appraiser").value.trim();
-    var roleKey = document.getElementById("f-role").value;
+    var roleKey = document.getElementById("f-role").value.replace("-", "_");
 
     if(!empid || !name || !designation || !appraiser || !roleKey){
       alert("Please fill all required fields."); return;
