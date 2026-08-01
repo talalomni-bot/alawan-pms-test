@@ -279,7 +279,7 @@
 <script>
 (function(){
   // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE:
-  var SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxr5GpEVHZn9000IKgL89mS7EBAep3hs96sG2vKLhxYj3pX5cPFHfrrbr4ykS96GZmcqQ/exec"; 
+  var SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxft6HdoBObAJmlVnDfFU15EdPXysGdRmGkIkhlDs2_aPqo6Hkj9TNupUh2sxMzpGJAeg/exec"; 
 
   var COMPETENCIES = {
     site: { title: "Site Staff", items: [{ key:"technical_execution", name:"Technical Execution" }, { key:"hse_compliance", name:"HSE Compliance" }, { key:"attendance", name:"Attendance" }, { key:"teamwork", name:"Teamwork" }, { key:"problem_solving", name:"Problem Solving" }, { key:"reporting_accuracy", name:"Reporting Accuracy" }] },
@@ -351,10 +351,9 @@
 
   // Helper to dynamically locate text fields in appraiser records regardless of backend key format
   function findFieldVal(obj, keywords) {
-    if (!obj || typeof obj !== 'object') return "None entered";
+    if (!obj || typeof obj !== 'object') return null;
     var keys = Object.keys(obj);
     
-    // Direct search for matching keyword in object keys
     for (var i = 0; i < keys.length; i++) {
       var keyName = keys[i];
       var cleanKey = keyName.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -368,7 +367,7 @@
         }
       }
     }
-    return "None entered";
+    return null;
   }
 
   // Submit to Google Sheets Central Database
@@ -412,7 +411,6 @@
       competency_scores: scoresObj,
       average_score: Math.round(avg * 100) / 100,
       achievements: achievementsText,
-      // Pass all standard payload key variations for Apps Script compatibility
       improvement: improvementText,
       improvements: improvementText,
       areas_for_improvement: improvementText,
@@ -458,13 +456,13 @@
         var multiCount = 0;
 
         raw.forEach(function(item){
-          var id = item.employee ? item.employee.empid : (item.empid || item["Staff ID"]);
+          var id = item.employee ? item.employee.empid : (item.empid || item["Staff ID"] || item["Emp ID"]);
           if(!id) return;
           if(!grouped[id]){
             grouped[id] = { 
               empid: id, 
-              name: item.employee ? item.employee.name : (item.name || item["Employee Name"]), 
-              designation: item.employee ? item.employee.designation : (item.designation || item["Designation"]), 
+              name: item.employee ? item.employee.name : (item.name || item["Employee Name"] || "Staff"), 
+              designation: item.employee ? item.employee.designation : (item.designation || item["Designation"] || "N/A"), 
               reviews: [] 
             };
           }
@@ -476,7 +474,7 @@
 
         keys.forEach(function(id){
           if(grouped[id].reviews.length > 1) multiCount++;
-          grouped[id].reviews.forEach(function(r){ totalScores += parseFloat(r.average_score || r["Combined Avg"] || 0); });
+          grouped[id].reviews.forEach(function(r){ totalScores += parseFloat(r.average_score || r["Average Score"] || r["Combined Avg"] || 0); });
         });
 
         document.getElementById("stat-total").textContent = keys.length;
@@ -489,8 +487,8 @@
         var html = '<table class="sub-table"><thead><tr><th>Staff ID</th><th>Employee</th><th>Appraisers</th><th>Combined Avg</th><th>Action</th></tr></thead><tbody>';
         keys.forEach(function(id){
           var g = grouped[id];
-          var totalAvg = g.reviews.reduce(function(a,b){ return a + parseFloat(b.average_score || b["Combined Avg"] || 0); }, 0) / g.reviews.length;
-          var appraiserNames = g.reviews.map(function(r){ return (r.appraiser && r.appraiser.name) ? r.appraiser.name : (r.appraiser_name || "Appraiser"); }).join(", ");
+          var totalAvg = g.reviews.reduce(function(a,b){ return a + parseFloat(b.average_score || b["Average Score"] || b["Combined Avg"] || 0); }, 0) / g.reviews.length;
+          var appraiserNames = g.reviews.map(function(r){ return (r.appraiser && r.appraiser.name) ? r.appraiser.name : (r.appraiser_name || r["Appraiser Name"] || "Appraiser"); }).join(", ");
 
           html += '<tr>' +
             '<td><b>' + g.empid + '</b></td>' +
@@ -524,15 +522,14 @@
     var html = '<div style="margin-bottom:16px;"><strong>Designation:</strong> ' + group.designation + '</div>';
 
     group.reviews.forEach(function(r, idx){
-      var appraiserName = (r.appraiser && r.appraiser.name) ? r.appraiser.name : (r.appraiser_name || "Appraiser");
+      var appraiserName = (r.appraiser && r.appraiser.name) ? r.appraiser.name : (r.appraiser_name || r["Appraiser Name"] || "Appraiser");
       var appraiserDesig = (r.appraiser && r.appraiser.designation) ? ' (' + r.appraiser.designation + ')' : '';
-      var avgScore = r.average_score || r["Combined Avg"] || "3.0";
+      var avgScore = r.average_score || r["Average Score"] || r["Combined Avg"] || "N/A";
 
       html += '<div class="feedback-card">' +
         '<h4>Appraiser #' + (idx+1) + ': ' + appraiserName + appraiserDesig + '</h4>' +
         '<div class="fb-field"><b>Overall Score:</b> ' + avgScore + ' / 5</div>';
       
-      // Render Competency Breakdown Table if available
       if(r.competency_scores && Object.keys(r.competency_scores).length > 0){
         html += '<div style="margin: 10px 0; font-size:12px;"><b>Competency Breakdown:</b></div>' +
                 '<table style="width:100%; border-collapse:collapse; margin-bottom:10px; background:#fff; font-size:12px; border:1px solid var(--line-soft);">' +
@@ -544,11 +541,11 @@
         html += '</tbody></table>';
       }
 
-      // Dynamic text discovery using multiple keyword search
-      var achievementsVal = findFieldVal(r, ["achieve"]);
-      var improvementVal = findFieldVal(r, ["improv", "area"]);
-      var trainingVal = findFieldVal(r, ["train", "develop"]);
-      var recVal = r.recommendation || findFieldVal(r, ["recommend"]) || "N/A";
+      // Explicit property check followed by multi-keyword fuzzy extraction
+      var achievementsVal = r.achievements || r["Key Achievements"] || findFieldVal(r, ["achieve"]) || "None entered";
+      var improvementVal = r.improvement || r["Areas for Improvement"] || r.improvements || r.areas_for_improvement || findFieldVal(r, ["improv", "area"]) || "None entered";
+      var trainingVal = r.training || r["Training Needs"] || r.training_needs || findFieldVal(r, ["train", "develop"]) || "None entered";
+      var recVal = r.recommendation || r["Recommendation"] || findFieldVal(r, ["recommend"]) || "N/A";
 
       html += '<div class="fb-field"><b>Recommendation:</b> ' + recVal + '</div>' +
         '<div class="fb-field"><b>Key Achievements:</b> ' + achievementsVal + '</div>' +
