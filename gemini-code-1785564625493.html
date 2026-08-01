@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Al Awan — Performance Appraisal Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --ink:#16233A;
+      --ink-soft:#3A4A63;
+      --paper:#FAF8F3;
+      --panel:#FFFFFF;
+      --line:#C7D2DE;
+      --line-soft:#E4E9EF;
+      --accent:#D98A3D;
+      --accent-soft:#F5E3C8;
+      --success:#3E7A4F;
+      --success-soft:#E1EEE3;
+      --danger:#B23A2E;
+      --danger-soft:#F5DEDA;
+      --warn:#C9962C;
+      --warn-soft:#F7ECD3;
+      --radius:2px;
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;}
+    body{
+      background:
+        linear-gradient(var(--line-soft) 1px, transparent 1px) 0 0/40px 40px,
+        linear-gradient(90deg, var(--line-soft) 1px, transparent 1px) 0 0/40px 40px,
+        var(--paper);
+      color:var(--ink);
+      font-family:'Inter', sans-serif;
+      min-height:100vh;
+      -webkit-font-smoothing:antialiased;
+    }
+    .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px;}
+
+    /* ---------- Header / Titleblock ---------- */
+    .titleblock{
+      background:var(--ink);
+      color:#fff;
+      border:1px solid var(--ink);
+      display:grid;
+      grid-template-columns:1fr auto;
+    }
+    .titleblock-main{padding:22px 26px 18px;}
+    .titleblock-eyebrow{
+      font-family:'IBM Plex Mono', monospace;
+      font-size:11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:var(--accent);
+      margin:0 0 8px;
+    }
+    .titleblock-main h1{
+      font-family:'Space Grotesk', sans-serif;
+      font-size:26px;
+      margin:0 0 6px;
+      letter-spacing:-.01em;
+    }
+    .titleblock-main p{margin:0; font-size:13px; color:#C3CCDA;}
+    .titleblock-stamp{
+      border-left:1px solid rgba(255,255,255,.18);
+      padding:16px 20px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:10px;
+      font-family:'IBM Plex Mono', monospace;
+      font-size:10.5px;
+      min-width:150px;
+    }
+    .stamp-row{display:flex; justify-content:space-between; gap:12px; color:#9AA7BC;}
+    .stamp-row b{color:#fff; font-weight:600;}
+
+    /* ---------- Navigation Tabs ---------- */
+    .tabs{
+      display:flex;
+      gap:2px;
+      margin-top:18px;
+      border-bottom:1px solid var(--line);
+    }
+    .tab-btn{
+      font-family:'IBM Plex Mono', monospace;
+      font-size:12px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      padding:12px 20px;
+      background:transparent;
+      border:none;
+      border-bottom:3px solid transparent;
+      color:var(--ink-soft);
+      cursor:pointer;
+      transition:color .15s ease;
+    }
+    .tab-btn:hover{color:var(--ink);}
+    .tab-btn.active{color:var(--ink); border-bottom-color:var(--accent); font-weight:600;}
+
+    .panel{display:none; padding-top:22px;}
+    .panel.active{display:block;}
+
+    /* ---------- Form Sections & Cards ---------- */
+    .sec{
+      display:grid;
+      grid-template-columns:44px 1fr;
+      background:var(--accent-soft);
+      border:1px solid var(--line);
+      margin:26px 0 14px;
+    }
+    .sec .num{
+      display:flex;align-items:center;justify-content:center;
+      font-family:'IBM Plex Mono', monospace;
+      font-weight:600;
+      background:var(--ink);
+      color:#fff;
+      font-size:13px;
+    }
+    .sec .lbl{
+      padding:10px 14px;
+      font-family:'Space Grotesk', sans-serif;
+      font-weight:600;
+      font-size:14px;
+      letter-spacing:.02em;
+      color:var(--ink);
+    }
+    .sec .lbl small{
+      display:block; font-family:'Inter', sans-serif; font-weight:400; color:var(--ink-soft); font-size:11.5px; margin-top:2px;
+    }
+
+    .card{background:var(--panel); border:1px solid var(--line); padding:18px;}
+    .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+    .field{margin-bottom:14px;}
+    .field label{
+      display:block; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:6px;
+    }
+    .field input[type=text], .field input[type=date], .field select, .field textarea{
+      width:100%; font-family:'Inter', sans-serif; font-size:14px; padding:9px 10px; border:1px solid var(--line); border-radius:var(--radius); background:#fff; color:var(--ink);
+    }
+    .field textarea{min-height:70px; resize:vertical;}
+    .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent);}
+    .hint{font-size:12px; color:var(--ink-soft); margin:-6px 0 16px;}
+
+    /* ---------- Competency Table ---------- */
+    .comp-table{width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line);}
+    .comp-table th{
+      background:var(--ink); color:#fff; font-family:'IBM Plex Mono', monospace; font-size:11px; text-transform:uppercase; letter-spacing:.05em; padding:10px 8px; text-align:left;
+    }
+    .comp-table th.score{text-align:center; width:42px;}
+    .comp-table td{border-top:1px solid var(--line-soft); padding:10px 8px; vertical-align:top;}
+    .comp-table td.score{text-align:center;}
+    .comp-name{font-weight:600; font-size:13.5px;}
+    .comp-desc{font-size:12px; color:var(--ink-soft); font-style:italic; margin-top:2px;}
+    .comp-table input[type=radio]{width:16px; height:16px; accent-color:var(--accent);}
+    .comp-table input[type=text]{width:100%; border:1px solid var(--line-soft); padding:6px 8px; font-size:12.5px; border-radius:var(--radius);}
+    .comp-group-title{font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:13.5px; margin:20px 0 4px; color:var(--ink);}
+    .comp-group-sub{font-size:11.5px; color:var(--ink-soft); margin:0 0 8px;}
+
+    .radio-list label{display:flex; align-items:center; gap:8px; font-size:13.5px; padding:6px 0; cursor:pointer;}
+    .radio-list input{accent-color:var(--accent); width:16px; height:16px;}
+
+    /* ---------- Buttons ---------- */
+    .btn{
+      font-family:'IBM Plex Mono', monospace; font-size:12.5px; letter-spacing:.04em; text-transform:uppercase; padding:12px 22px; border:1px solid var(--ink); background:var(--ink); color:#fff; cursor:pointer; border-radius:var(--radius); transition:transform .1s ease, background .15s ease;
+    }
+    .btn:hover{background:#233450;}
+    .btn:active{transform:translateY(1px);}
+    .btn.secondary{background:transparent; color:var(--ink); border-color:var(--line);}
+    .btn.secondary:hover{border-color:var(--ink);}
+    .btn.small{padding:7px 12px; font-size:11px;}
+    .btn:disabled{opacity:.5; cursor:not-allowed;}
+
+    .submit-row{display:flex; justify-content:flex-end; align-items:center; gap:14px; margin-top:24px;}
+    .submit-note{font-size:12px; color:var(--ink-soft); flex:1;}
+
+    .banner{padding:12px 16px; border-radius:var(--radius); font-size:13px; margin-bottom:16px; display:none; align-items:center; gap:8px;}
+    .banner.show{display:flex;}
+    .banner.ok{background:var(--success-soft); color:var(--success); border:1px solid #bcd9c2;}
+    .banner.err{background:var(--danger-soft); color:var(--danger); border:1px solid #e4bcb6;}
+
+    /* ---------- Dashboard Styling ---------- */
+    .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:22px;}
+    .stat{background:#fff; border:1px solid var(--line); padding:16px;}
+    .stat .n{font-family:'Space Grotesk', sans-serif; font-size:26px; font-weight:700; color:var(--ink);}
+    .stat .l{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-top:4px; font-family:'IBM Plex Mono', monospace;}
+
+    .sub-table{width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line);}
+    .sub-table th{background:var(--ink); color:#fff; text-align:left; padding:10px 10px; font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-family:'IBM Plex Mono', monospace;}
+    .sub-table td{padding:11px 10px; border-top:1px solid var(--line-soft); font-size:13px;}
+    
+    .badge{display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; font-family:'IBM Plex Mono', monospace;}
+    .badge.multi{background:#E0E8F5; color:#163A70; border:1px solid #B0C4DE;}
+    .badge.single{background:#F0F4F8; color:#5A6B82;}
+    .badge.r5{background:var(--success-soft); color:var(--success);}
+    .badge.r4{background:#DCEAE0; color:#2E6640;}
+    .badge.r3{background:var(--warn-soft); color:#8a6a1a;}
+    .badge.r2{background:#FBE3D3; color:#9a5321;}
+    .badge.r1{background:var(--danger-soft); color:var(--danger);}
+
+    .empty{text-align:center; padding:60px 20px; color:var(--ink-soft); border:1px dashed var(--line); background:#fff;}
+    .empty h3{font-family:'Space Grotesk', sans-serif; color:var(--ink); margin-bottom:6px;}
+
+    /* ---------- Security Gate ---------- */
+    .gate{max-width:380px; margin:60px auto; background:#fff; border:1px solid var(--line); padding:30px 28px; text-align:center;}
+    .gate .lock{width:38px; height:38px; margin:0 auto 14px; border:1px solid var(--ink); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;}
+    .gate h3{font-family:'Space Grotesk', sans-serif; margin:0 0 6px; font-size:17px;}
+    .gate p{font-size:12.5px; color:var(--ink-soft); margin:0 0 18px;}
+    .gate input{width:100%; text-align:center; letter-spacing:.1em; font-family:'IBM Plex Mono', monospace; padding:11px 10px; border:1px solid var(--line); font-size:14px; margin-bottom:10px;}
+    .gate .btn{width:100%;}
+    .gate .err{color:var(--danger); font-size:12px; min-height:16px; margin-top:10px;}
+
+    footer{margin-top:60px; text-align:center; font-size:11px; color:var(--ink-soft); font-family:'IBM Plex Mono', monospace;}
+
+    @media (max-width:640px){
+      .grid2{grid-template-columns:1fr;}
+      .stats{grid-template-columns:1fr 1fr;}
+      .titleblock{grid-template-columns:1fr;}
+      .titleblock-stamp{border-left:none; border-top:1px solid rgba(255,255,255,.18);}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="titleblock">
+    <div class="titleblock-main">
+      <p class="titleblock-eyebrow">Al Awan Electric Works &amp; Construction Co.</p>
+      <h1>Performance Appraisal Portal</h1>
+      <p>Submit appraisals across site and office personnel or monitor real-time multi-appraiser averages.</p>
+    </div>
+    <div class="titleblock-stamp">
+      <div class="stamp-row"><span>Cycle</span><b>Jul–Jun</b></div>
+      <div class="stamp-row"><span>Scale</span><b>1–5</b></div>
+      <div class="stamp-row"><span>Rev</span><b>2026.2</b></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="form">New Appraisal</button>
+    <button class="tab-btn" data-tab="dash">Dashboard</button>
+  </div>
+
+  <!-- ========================= FORM PANEL ========================= -->
+  <div class="panel active" id="panel-form">
+    <div id="form-banner" class="banner"></div>
+
+    <div class="sec"><div class="num">1</div><div class="lbl">Employee & Appraiser Details</div></div>
+    <div class="card">
+      <div class="grid2">
+        <div class="field"><label>Staff ID / Employee ID *</label><input type="text" id="f-empid" placeholder="e.g. EMP-102" /></div>
+        <div class="field"><label>Full Name *</label><input type="text" id="f-name" placeholder="e.g. Ahmed Raza" /></div>
+        <div class="field"><label>Designation / Role *</label><input type="text" id="f-designation" placeholder="e.g. Site Engineer" /></div>
+        <div class="field"><label>Department / Site Location</label><input type="text" id="f-dept" placeholder="e.g. DHA Phase 6 Site" /></div>
+        <div class="field"><label>Appraiser Name *</label><input type="text" id="f-appraiser" placeholder="Your name" /></div>
+        <div class="field"><label>Appraiser Designation</label><input type="text" id="f-appraiser-desig" placeholder="e.g. Project Manager" /></div>
+      </div>
+      <div class="field">
+        <label>Role Group *</label>
+        <select id="f-role">
+          <option value="">Select role group…</option>
+          <option value="site">Site Staff</option>
+          <option value="ho_technical">Head Office — Technical</option>
+          <option value="ho_support">Head Office — Support</option>
+        </select>
+      </div>
+      <p class="hint">The competency criteria below adapts dynamically based on your selected role group.</p>
+    </div>
+
+    <div class="sec"><div class="num">2</div><div class="lbl">Performance Scoring<small>1 = Unsatisfactory · 2 = Needs Improvement · 3 = Satisfactory · 4 = Strong · 5 = Exceptional</small></div></div>
+    <div id="comp-container"></div>
+
+    <div class="sec"><div class="num">3</div><div class="lbl">Qualitative Assessment<small>Optional — provide additional evidence or improvement notes.</small></div></div>
+    <div class="card">
+      <div class="field"><label>Key Achievements this period</label><textarea id="f-achievements" placeholder="Specific deliverables or targets met…"></textarea></div>
+      <div class="field"><label>Key Areas for Improvement</label><textarea id="f-improvement" placeholder="Specific skill gaps observed…"></textarea></div>
+      <div class="field"><label>Training &amp; Development Needs</label><textarea id="f-training" placeholder="Courses, certifications, mentorship…"></textarea></div>
+    </div>
+
+    <div class="sec"><div class="num">4</div><div class="lbl">Final Recommendation</div></div>
+    <div class="card">
+      <div class="radio-list">
+        <label><input type="radio" name="f-rec" value="Confirm / Retain"> Confirm / Retain — no further action required</label>
+        <label><input type="radio" name="f-rec" value="Increment Recommended"> Increment Recommended — submit to CEO for approval</label>
+        <label><input type="radio" name="f-rec" value="Promotion Recommended"> Promotion Recommended — submit to CEO for approval</label>
+        <label><input type="radio" name="f-rec" value="PIP"> Performance Improvement Plan (PIP) to be issued</label>
+        <label><input type="radio" name="f-rec" value="Termination"> Contract Termination — refer to HR</label>
+      </div>
+    </div>
+
+    <div class="sec"><div class="num">5</div><div class="lbl">Appraiser Confirmation</div></div>
+    <div class="card grid2">
+      <div class="field"><label>Typed Signature (Appraiser) *</label><input type="text" id="f-sign" placeholder="Type your full name to sign"/></div>
+      <div class="field"><label>Date</label><input type="date" id="f-sign-date"/></div>
+    </div>
+
+    <div class="submit-row">
+      <div class="submit-note">Submissions are aggregated by Employee ID to support multi-appraiser evaluations.</div>
+      <button class="btn secondary" id="btn-reset">Clear form</button>
+      <button class="btn" id="btn-submit">Submit appraisal</button>
+    </div>
+  </div>
+
+  <!-- ========================= DASHBOARD PANEL ========================= -->
+  <div class="panel" id="panel-dash">
+    <div class="gate" id="dash-gate">
+      <div class="lock">&#128274;</div>
+      <h3>HR / Management Access</h3>
+      <p>Enter the passcode to unlock consolidated appraisal metrics and multi-appraiser averages.</p>
+      <input type="password" id="gate-input" placeholder="Passcode" autocomplete="off" />
+      <button class="btn" id="gate-submit">Unlock dashboard</button>
+      <div class="err" id="gate-err"></div>
+    </div>
+
+    <div id="dash-authed" style="display:none;">
+      <div class="stats">
+        <div class="stat"><div class="n" id="stat-total">–</div><div class="l">Unique Staff</div></div>
+        <div class="stat"><div class="n" id="stat-reviews">–</div><div class="l">Total Reviews</div></div>
+        <div class="stat"><div class="n" id="stat-avg">–</div><div class="l">Combined Avg</div></div>
+        <div class="stat"><div class="n" id="stat-multi">–</div><div class="l">Multi-Rated</div></div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 style="font-family:'Space Grotesk', sans-serif; margin:0;">Consolidated Performance Database</h3>
+        <div>
+          <button class="btn secondary small" id="btn-refresh">Refresh Data</button>
+          <button class="btn secondary small" id="btn-lock">Lock View</button>
+        </div>
+      </div>
+
+      <div id="dash-content"></div>
+    </div>
+  </div>
+
+  <footer>AL AWAN ELECTRIC WORKS &amp; CONSTRUCTION CO. — PERFORMANCE MANAGEMENT SYSTEM</footer>
+</div>
+
+<script>
+(function(){
+  var COMPETENCIES = {
+    site: {
+      title: "Site Staff",
+      sub: "Site Engineers, Supervisors, Safety Officers, Generator Operators",
+      items: [
+        { key:"technical_execution", name:"Technical Execution", desc:"Quality of MEP engineering and installation supervision" },
+        { key:"hse_compliance", name:"HSE Compliance", desc:"PPE adherence, safety rules, incident prevention" },
+        { key:"attendance", name:"Attendance & Punctuality", desc:"Shift adherence and consistent presence" },
+        { key:"teamwork", name:"Teamwork & Coordination", desc:"Cooperation with crew, subcontractors, and engineers" },
+        { key:"problem_solving", name:"Problem Solving", desc:"Resolving site issues independently without unwarranted escalation" },
+        { key:"reporting_accuracy", name:"Reporting Accuracy", desc:"Timeliness and accuracy of progress/HSE reports" }
+      ]
+    },
+    ho_technical: {
+      title: "Head Office — Technical",
+      sub: "Project Engineers, Application Engineers, CAD Operators, Planning Engineers",
+      items: [
+        { key:"technical_expertise", name:"Technical Expertise", desc:"Knowledge of MEP systems, drawings, project planning" },
+        { key:"deliverable_quality", name:"Deliverable Quality", desc:"Accuracy of designs, BOQs, technical reports, CAD work" },
+        { key:"project_management", name:"Project Management", desc:"Planning, monitoring, and reporting on project milestones" },
+        { key:"client_coordination", name:"Client Coordination", desc:"Communication with clients and site teams" },
+        { key:"deadline_adherence", name:"Deadline Adherence", desc:"Timely delivery of assigned technical deliverables" },
+        { key:"innovation", name:"Innovation & Improvement", desc:"Process or cost enhancement ideas" }
+      ]
+    },
+    ho_support: {
+      title: "Head Office — Support",
+      sub: "Finance, HR, Procurement, Admin, IT, Store Staff",
+      items: [
+        { key:"role_specific", name:"Role-Specific Competence", desc:"Proficiency in core operational domain" },
+        { key:"accuracy_detail", name:"Accuracy & Detail", desc:"Error rate in documentation and compliance records" },
+        { key:"policy_compliance", name:"Policy Compliance", desc:"Adherence to corporate SOPs and code of conduct" },
+        { key:"communication", name:"Communication", desc:"Query resolution speed and inter-departmental support" },
+        { key:"initiative", name:"Initiative & Ownership", desc:"Proactive effort beyond routine duties" },
+        { key:"confidentiality", name:"Confidentiality", desc:"Handling sensitive company, HR, or financial records" }
+      ]
+    }
+  };
+
+  var DASH_PASSCODE = "AlAwan2026";
+  var dashUnlocked = false;
+
+  // ---------- Navigation ----------
+  var tabBtns = document.querySelectorAll(".tab-btn");
+  tabBtns.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      tabBtns.forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("active"); });
+      document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+      if(btn.dataset.tab === "dash"){
+        if(dashUnlocked){
+          document.getElementById("dash-gate").style.display = "none";
+          document.getElementById("dash-authed").style.display = "block";
+          loadDashboard();
+        } else {
+          document.getElementById("dash-gate").style.display = "block";
+          document.getElementById("dash-authed").style.display = "none";
+          document.getElementById("gate-input").value = "";
+          document.getElementById("gate-err").textContent = "";
+        }
+      }
+    });
+  });
+
+  // ---------- Security Gate ----------
+  function tryUnlock(){
+    if(document.getElementById("gate-input").value === DASH_PASSCODE){
+      dashUnlocked = true;
+      document.getElementById("dash-gate").style.display = "none";
+      document.getElementById("dash-authed").style.display = "block";
+      loadDashboard();
+    } else {
+      document.getElementById("gate-err").textContent = "Incorrect passcode. Please try again.";
+    }
+  }
+  document.getElementById("gate-submit").addEventListener("click", tryUnlock);
+  document.getElementById("gate-input").addEventListener("keydown", function(e){ if(e.key === "Enter") tryUnlock(); });
+  document.getElementById("btn-lock").addEventListener("click", function(){
+    dashUnlocked = false;
+    document.getElementById("dash-gate").style.display = "block";
+    document.getElementById("dash-authed").style.display = "none";
+  });
+
+  // ---------- Form Render ----------
+  var compContainer = document.getElementById("comp-container");
+  document.getElementById("f-role").addEventListener("change", function(e){ renderCompetencies(e.target.value); });
+
+  function renderCompetencies(roleKey){
+    compContainer.innerHTML = "";
+    if(!roleKey){
+      compContainer.innerHTML = '<div class="card"><p class="hint" style="margin:0;">Select a role group above to load evaluation criteria.</p></div>';
+      return;
+    }
+    var group = COMPETENCIES[roleKey];
+    var wrap = document.createElement("div"); wrap.className = "card";
+    wrap.innerHTML = '<div class="comp-group-title">'+group.title+' — Competencies</div><div class="comp-group-sub">Applies to: '+group.sub+'</div>';
+
+    var table = document.createElement("table"); table.className = "comp-table";
+    table.innerHTML = '<thead><tr><th>Competency</th><th class="score">1</th><th class="score">2</th><th class="score">3</th><th class="score">4</th><th class="score">5</th><th>Notes</th></tr></thead>';
+    var tbody = document.createElement("tbody");
+
+    group.items.forEach(function(item){
+      var tr = document.createElement("tr");
+      var html = '<td><div class="comp-name">'+item.name+'</div><div class="comp-desc">'+item.desc+'</div></td>';
+      [1,2,3,4,5].forEach(function(n){
+        html += '<td class="score"><input type="radio" name="score_'+item.key+'" value="'+n+'" required /></td>';
+      });
+      html += '<td><input type="text" data-notes-for="'+item.key+'" placeholder="Optional note" /></td>';
+      tr.innerHTML = html;
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    compContainer.appendChild(wrap);
+  }
+  renderCompetencies("");
+
+  function showBanner(type, msg){
+    var el = document.getElementById("form-banner");
+    el.className = "banner show " + type;
+    el.textContent = msg;
+    if(type === "ok") setTimeout(function(){ el.classList.remove("show"); }, 4000);
+  }
+
+  // ---------- Submit Handler with Local Storage ----------
+  document.getElementById("btn-reset").addEventListener("click", function(){
+    if(confirm("Clear form entries?")){
+      document.querySelectorAll("#panel-form input[type=text], #panel-form input[type=date], #panel-form textarea").forEach(function(i){ i.value=""; });
+      document.querySelectorAll("#panel-form input[type=radio]").forEach(function(r){ r.checked=false; });
+      document.getElementById("f-role").value = "";
+      renderCompetencies("");
+    }
+  });
+
+  document.getElementById("btn-submit").addEventListener("click", function(){
+    var empid = document.getElementById("f-empid").value.trim().toUpperCase();
+    var name = document.getElementById("f-name").value.trim();
+    var designation = document.getElementById("f-designation").value.trim();
+    var appraiser = document.getElementById("f-appraiser").value.trim();
+    var roleKey = document.getElementById("f-role").value;
+    var sign = document.getElementById("f-sign").value.trim();
+
+    if(!empid || !name || !designation || !appraiser || !roleKey || !sign){
+      showBanner("err", "Please complete all required fields: Staff ID, Full Name, Designation, Appraiser, Role Group, and Signature.");
+      window.scrollTo({top:0, behavior:"smooth"});
+      return;
+    }
+
+    var group = COMPETENCIES[roleKey];
+    var scores = [];
+    var missing = [];
+    group.items.forEach(function(item){
+      var checked = document.querySelector('input[name="score_'+item.key+'"]:checked');
+      if(!checked){ missing.push(item.name); }
+      else { scores.push(parseInt(checked.value, 10)); }
+    });
+
+    if(missing.length){
+      showBanner("err", "Missing ratings for: " + missing.join(", "));
+      return;
+    }
+
+    var avg = scores.reduce(function(a,b){ return a+b; }, 0) / scores.length;
+    var recEl = document.querySelector('input[name="f-rec"]:checked');
+
+    var record = {
+      id: "appraisal_" + Date.now(),
+      submitted_at: new Date().toISOString(),
+      employee: { empid: empid, name: name, designation: designation, department: document.getElementById("f-dept").value.trim() },
+      appraiser: { name: appraiser, designation: document.getElementById("f-appraiser-desig").value.trim() },
+      role_group: roleKey,
+      average_score: Math.round(avg * 100) / 100,
+      recommendation: recEl ? recEl.value : "None"
+    };
+
+    // Save to browser memory
+    var existing = JSON.parse(localStorage.getItem("alawan_pms_records") || "[]");
+    existing.push(record);
+    localStorage.setItem("alawan_pms_records", JSON.stringify(existing));
+
+    showBanner("ok", "Appraisal for " + name + " (" + empid + ") submitted successfully! Average: " + Math.round(avg * 100) / 100 + "/5.");
+    
+    // Clear
+    document.querySelectorAll("#panel-form input[type=text], #panel-form input[type=date], #panel-form textarea").forEach(function(i){ i.value=""; });
+    document.querySelectorAll("#panel-form input[type=radio]").forEach(function(r){ r.checked=false; });
+    document.getElementById("f-role").value = "";
+    renderCompetencies("");
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+
+  // ---------- Multi-Appraiser Consolidation Dashboard ----------
+  function loadDashboard(){
+    var raw = JSON.parse(localStorage.getItem("alawan_pms_records") || "[]");
+    var grouped = {};
+
+    // Group submissions by Staff ID
+    raw.forEach(function(item){
+      var id = item.employee.empid;
+      if(!grouped[id]){
+        grouped[id] = {
+          empid: id,
+          name: item.employee.name,
+          designation: item.employee.designation,
+          reviews: [],
+          scores: []
+        };
+      }
+      grouped[id].reviews.push(item.appraiser.name);
+      grouped[id].scores.push(item.average_score);
+    });
+
+    var aggregated = Object.keys(grouped).map(function(id){
+      var g = grouped[id];
+      var combAvg = g.scores.reduce(function(a,b){ return a+b; }, 0) / g.scores.length;
+      return {
+        empid: id,
+        name: g.name,
+        designation: g.designation,
+        total_reviews: g.reviews.length,
+        appraisers: g.reviews.join(", "),
+        combined_avg: Math.round(combAvg * 100) / 100,
+        overall_rating: Math.round(combAvg)
+      };
+    });
+
+    // Stats calculation
+    document.getElementById("stat-total").textContent = aggregated.length;
+    document.getElementById("stat-reviews").textContent = raw.length;
+    var grandAvg = aggregated.length ? (aggregated.reduce(function(a,b){ return a + b.combined_avg; }, 0) / aggregated.length).toFixed(2) : "0.00";
+    document.getElementById("stat-avg").textContent = grandAvg;
+    var multiCount = aggregated.filter(function(x){ return x.total_reviews > 1; }).length;
+    document.getElementById("stat-multi").textContent = multiCount;
+
+    var container = document.getElementById("dash-content");
+    if(!aggregated.length){
+      container.innerHTML = '<div class="empty"><h3>No appraisals submitted yet</h3><p>Submissions will automatically aggregate here.</p></div>';
+      return;
+    }
+
+    var html = '<table class="sub-table"><thead><tr><th>Staff ID</th><th>Employee Name</th><th>Review Status</th><th>Appraiser(s)</th><th>Combined Avg</th><th>Overall Rating</th></tr></thead><tbody>';
+    aggregated.forEach(function(item){
+      var statusBadge = item.total_reviews > 1 
+        ? '<span class="badge multi">Multi-Rated (' + item.total_reviews + ' Appraisers)</span>' 
+        : '<span class="badge single">Single Appraiser</span>';
+
+      html += '<tr>' +
+        '<td><b>' + item.empid + '</b></td>' +
+        '<td><b>' + item.name + '</b><br><small>' + item.designation + '</small></td>' +
+        '<td>' + statusBadge + '</td>' +
+        '<td><small>' + item.appraisers + '</small></td>' +
+        '<td><b>' + item.combined_avg + ' / 5</b></td>' +
+        '<td><span class="badge r' + item.overall_rating + '">' + item.overall_rating + ' / 5</span></td>' +
+      '</tr>';
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  document.getElementById("btn-refresh").addEventListener("click", loadDashboard);
+})();
+</script>
+</body>
+</html>
