@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- html2pdf Library for Client-side PDF Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     :root{
       --ink:#16233A;
@@ -38,7 +40,6 @@
     }
     .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px;}
 
-    /* ---------- Header / Titleblock ---------- */
     .titleblock{
       background:var(--ink);
       color:#fff;
@@ -76,149 +77,75 @@
     .stamp-row{display:flex; justify-content:space-between; gap:12px; color:#9AA7BC;}
     .stamp-row b{color:#fff; font-weight:600;}
 
-    /* ---------- Navigation Tabs ---------- */
-    .tabs{
-      display:flex;
-      gap:2px;
-      margin-top:18px;
-      border-bottom:1px solid var(--line);
-    }
+    .tabs{display:flex; gap:2px; margin-top:18px; border-bottom:1px solid var(--line);}
     .tab-btn{
-      font-family:'IBM Plex Mono', monospace;
-      font-size:12px;
-      letter-spacing:.06em;
-      text-transform:uppercase;
-      padding:12px 20px;
-      background:transparent;
-      border:none;
-      border-bottom:3px solid transparent;
-      color:var(--ink-soft);
-      cursor:pointer;
-      transition:color .15s ease;
+      font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:.06em; text-transform:uppercase;
+      padding:12px 20px; background:transparent; border:none; border-bottom:3px solid transparent; color:var(--ink-soft); cursor:pointer;
     }
-    .tab-btn:hover{color:var(--ink);}
     .tab-btn.active{color:var(--ink); border-bottom-color:var(--accent); font-weight:600;}
 
     .panel{display:none; padding-top:22px;}
     .panel.active{display:block;}
 
-    /* ---------- Form Sections & Cards ---------- */
-    .sec{
-      display:grid;
-      grid-template-columns:44px 1fr;
-      background:var(--accent-soft);
-      border:1px solid var(--line);
-      margin:26px 0 14px;
-    }
-    .sec .num{
-      display:flex;align-items:center;justify-content:center;
-      font-family:'IBM Plex Mono', monospace;
-      font-weight:600;
-      background:var(--ink);
-      color:#fff;
-      font-size:13px;
-    }
-    .sec .lbl{
-      padding:10px 14px;
-      font-family:'Space Grotesk', sans-serif;
-      font-weight:600;
-      font-size:14px;
-      letter-spacing:.02em;
-      color:var(--ink);
-    }
-    .sec .lbl small{
-      display:block; font-family:'Inter', sans-serif; font-weight:400; color:var(--ink-soft); font-size:11.5px; margin-top:2px;
-    }
+    .sec{display:grid; grid-template-columns:44px 1fr; background:var(--accent-soft); border:1px solid var(--line); margin:26px 0 14px;}
+    .sec .num{display:flex;align-items:center;justify-content:center; font-family:'IBM Plex Mono', monospace; font-weight:600; background:var(--ink); color:#fff; font-size:13px;}
+    .sec .lbl{padding:10px 14px; font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:14px; color:var(--ink);}
+    .sec .lbl small{display:block; font-family:'Inter', sans-serif; font-weight:400; color:var(--ink-soft); font-size:11.5px; margin-top:2px;}
 
     .card{background:var(--panel); border:1px solid var(--line); padding:18px;}
     .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
     .field{margin-bottom:14px;}
-    .field label{
-      display:block; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:6px;
-    }
+    .field label{display:block; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:6px;}
     .field input[type=text], .field input[type=date], .field select, .field textarea{
       width:100%; font-family:'Inter', sans-serif; font-size:14px; padding:9px 10px; border:1px solid var(--line); border-radius:var(--radius); background:#fff; color:var(--ink);
     }
     .field textarea{min-height:70px; resize:vertical;}
-    .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent);}
-    .hint{font-size:12px; color:var(--ink-soft); margin:-6px 0 16px;}
 
-    /* ---------- Competency Table ---------- */
     .comp-table{width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line);}
-    .comp-table th{
-      background:var(--ink); color:#fff; font-family:'IBM Plex Mono', monospace; font-size:11px; text-transform:uppercase; letter-spacing:.05em; padding:10px 8px; text-align:left;
-    }
+    .comp-table th{background:var(--ink); color:#fff; font-family:'IBM Plex Mono', monospace; font-size:11px; text-transform:uppercase; padding:10px 8px; text-align:left;}
     .comp-table th.score{text-align:center; width:42px;}
     .comp-table td{border-top:1px solid var(--line-soft); padding:10px 8px; vertical-align:top;}
     .comp-table td.score{text-align:center;}
     .comp-name{font-weight:600; font-size:13.5px;}
-    .comp-desc{font-size:12px; color:var(--ink-soft); font-style:italic; margin-top:2px;}
     .comp-table input[type=radio]{width:16px; height:16px; accent-color:var(--accent);}
-    .comp-table input[type=text]{width:100%; border:1px solid var(--line-soft); padding:6px 8px; font-size:12.5px; border-radius:var(--radius);}
-    .comp-group-title{font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:13.5px; margin:20px 0 4px; color:var(--ink);}
-    .comp-group-sub{font-size:11.5px; color:var(--ink-soft); margin:0 0 8px;}
 
     .radio-list label{display:flex; align-items:center; gap:8px; font-size:13.5px; padding:6px 0; cursor:pointer;}
     .radio-list input{accent-color:var(--accent); width:16px; height:16px;}
 
-    /* ---------- Buttons ---------- */
     .btn{
-      font-family:'IBM Plex Mono', monospace; font-size:12.5px; letter-spacing:.04em; text-transform:uppercase; padding:12px 22px; border:1px solid var(--ink); background:var(--ink); color:#fff; cursor:pointer; border-radius:var(--radius); transition:transform .1s ease, background .15s ease;
+      font-family:'IBM Plex Mono', monospace; font-size:12.5px; letter-spacing:.04em; text-transform:uppercase;
+      padding:10px 18px; border:1px solid var(--ink); background:var(--ink); color:#fff; cursor:pointer; border-radius:var(--radius);
     }
-    .btn:hover{background:#233450;}
-    .btn:active{transform:translateY(1px);}
     .btn.secondary{background:transparent; color:var(--ink); border-color:var(--line);}
-    .btn.secondary:hover{border-color:var(--ink);}
-    .btn.small{padding:7px 12px; font-size:11px;}
-    .btn:disabled{opacity:.5; cursor:not-allowed;}
+    .btn.small{padding:5px 10px; font-size:11px;}
 
     .submit-row{display:flex; justify-content:flex-end; align-items:center; gap:14px; margin-top:24px;}
-    .submit-note{font-size:12px; color:var(--ink-soft); flex:1;}
 
-    .banner{padding:12px 16px; border-radius:var(--radius); font-size:13px; margin-bottom:16px; display:none; align-items:center; gap:8px;}
-    .banner.show{display:flex;}
-    .banner.ok{background:var(--success-soft); color:var(--success); border:1px solid #bcd9c2;}
-    .banner.err{background:var(--danger-soft); color:var(--danger); border:1px solid #e4bcb6;}
-
-    /* ---------- Dashboard Styling ---------- */
     .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:22px;}
     .stat{background:#fff; border:1px solid var(--line); padding:16px;}
     .stat .n{font-family:'Space Grotesk', sans-serif; font-size:26px; font-weight:700; color:var(--ink);}
-    .stat .l{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-top:4px; font-family:'IBM Plex Mono', monospace;}
+    .stat .l{font-size:11px; text-transform:uppercase; color:var(--ink-soft); margin-top:4px; font-family:'IBM Plex Mono', monospace;}
 
     .sub-table{width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line);}
-    .sub-table th{background:var(--ink); color:#fff; text-align:left; padding:10px 10px; font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-family:'IBM Plex Mono', monospace;}
+    .sub-table th{background:var(--ink); color:#fff; text-align:left; padding:10px 10px; font-size:11px; text-transform:uppercase; font-family:'IBM Plex Mono', monospace;}
     .sub-table td{padding:11px 10px; border-top:1px solid var(--line-soft); font-size:13px;}
-    
-    .badge{display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; font-family:'IBM Plex Mono', monospace;}
-    .badge.multi{background:#E0E8F5; color:#163A70; border:1px solid #B0C4DE;}
-    .badge.single{background:#F0F4F8; color:#5A6B82;}
-    .badge.r5{background:var(--success-soft); color:var(--success);}
-    .badge.r4{background:#DCEAE0; color:#2E6640;}
-    .badge.r3{background:var(--warn-soft); color:#8a6a1a;}
-    .badge.r2{background:#FBE3D3; color:#9a5321;}
-    .badge.r1{background:var(--danger-soft); color:var(--danger);}
 
-    .empty{text-align:center; padding:60px 20px; color:var(--ink-soft); border:1px dashed var(--line); background:#fff;}
-    .empty h3{font-family:'Space Grotesk', sans-serif; color:var(--ink); margin-bottom:6px;}
-
-    /* ---------- Security Gate ---------- */
     .gate{max-width:380px; margin:60px auto; background:#fff; border:1px solid var(--line); padding:30px 28px; text-align:center;}
-    .gate .lock{width:38px; height:38px; margin:0 auto 14px; border:1px solid var(--ink); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;}
-    .gate h3{font-family:'Space Grotesk', sans-serif; margin:0 0 6px; font-size:17px;}
-    .gate p{font-size:12.5px; color:var(--ink-soft); margin:0 0 18px;}
-    .gate input{width:100%; text-align:center; letter-spacing:.1em; font-family:'IBM Plex Mono', monospace; padding:11px 10px; border:1px solid var(--line); font-size:14px; margin-bottom:10px;}
-    .gate .btn{width:100%;}
-    .gate .err{color:var(--danger); font-size:12px; min-height:16px; margin-top:10px;}
+    .gate input{width:100%; text-align:center; font-family:'IBM Plex Mono', monospace; padding:11px 10px; border:1px solid var(--line); font-size:14px; margin-bottom:10px;}
+
+    /* ---------- Modal Styling for Feedback & PDF ---------- */
+    .modal-overlay{position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(22, 35, 58, 0.7); display:none; justify-content:center; align-items:center; z-index:999; padding:20px;}
+    .modal-overlay.active{display:flex;}
+    .modal{background:#fff; border:1px solid var(--line); width:100%; max-width:760px; max-height:85vh; overflow-y:auto; padding:24px; position:relative;}
+    .modal-header{display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:16px;}
+    .modal-title{font-family:'Space Grotesk', sans-serif; font-size:20px; margin:0;}
+    .close-modal{cursor:pointer; font-size:20px; font-weight:bold; background:none; border:none;}
+    .feedback-card{background:var(--paper); border:1px solid var(--line); padding:14px; margin-bottom:14px;}
+    .feedback-card h4{margin:0 0 8px 0; font-size:14px; color:var(--ink); font-family:'Space Grotesk', sans-serif;}
+    .fb-field{font-size:12.5px; margin-bottom:6px; line-height:1.4;}
+    .fb-field b{color:var(--ink-soft);}
 
     footer{margin-top:60px; text-align:center; font-size:11px; color:var(--ink-soft); font-family:'IBM Plex Mono', monospace;}
-
-    @media (max-width:640px){
-      .grid2{grid-template-columns:1fr;}
-      .stats{grid-template-columns:1fr 1fr;}
-      .titleblock{grid-template-columns:1fr;}
-      .titleblock-stamp{border-left:none; border-top:1px solid rgba(255,255,255,.18);}
-    }
   </style>
 </head>
 <body>
@@ -239,13 +166,11 @@
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="form">New Appraisal</button>
-    <button class="tab-btn" data-tab="dash">Dashboard</button>
+    <button class="tab-btn" data-tab="dash">HR Dashboard</button>
   </div>
 
-  <!-- ========================= FORM PANEL ========================= -->
+  <!-- FORM PANEL -->
   <div class="panel active" id="panel-form">
-    <div id="form-banner" class="banner"></div>
-
     <div class="sec"><div class="num">1</div><div class="lbl">Employee & Appraiser Details</div></div>
     <div class="card">
       <div class="grid2">
@@ -265,52 +190,49 @@
           <option value="ho_support">Head Office — Support</option>
         </select>
       </div>
-      <p class="hint">The competency criteria below adapts dynamically based on your selected role group.</p>
     </div>
 
     <div class="sec"><div class="num">2</div><div class="lbl">Performance Scoring<small>1 = Unsatisfactory · 2 = Needs Improvement · 3 = Satisfactory · 4 = Strong · 5 = Exceptional</small></div></div>
     <div id="comp-container"></div>
 
-    <div class="sec"><div class="num">3</div><div class="lbl">Qualitative Assessment<small>Optional — provide additional evidence or improvement notes.</small></div></div>
+    <div class="sec"><div class="num">3</div><div class="lbl">Qualitative Assessment</div></div>
     <div class="card">
-      <div class="field"><label>Key Achievements this period</label><textarea id="f-achievements" placeholder="Specific deliverables or targets met…"></textarea></div>
-      <div class="field"><label>Key Areas for Improvement</label><textarea id="f-improvement" placeholder="Specific skill gaps observed…"></textarea></div>
-      <div class="field"><label>Training &amp; Development Needs</label><textarea id="f-training" placeholder="Courses, certifications, mentorship…"></textarea></div>
+      <div class="field"><label>Key Achievements this period</label><textarea id="f-achievements"></textarea></div>
+      <div class="field"><label>Key Areas for Improvement</label><textarea id="f-improvement"></textarea></div>
+      <div class="field"><label>Training &amp; Development Needs</label><textarea id="f-training"></textarea></div>
     </div>
 
     <div class="sec"><div class="num">4</div><div class="lbl">Final Recommendation</div></div>
     <div class="card">
       <div class="radio-list">
-        <label><input type="radio" name="f-rec" value="Confirm / Retain"> Confirm / Retain — no further action required</label>
-        <label><input type="radio" name="f-rec" value="Increment Recommended"> Increment Recommended — submit to CEO for approval</label>
-        <label><input type="radio" name="f-rec" value="Promotion Recommended"> Promotion Recommended — submit to CEO for approval</label>
-        <label><input type="radio" name="f-rec" value="PIP"> Performance Improvement Plan (PIP) to be issued</label>
-        <label><input type="radio" name="f-rec" value="Termination"> Contract Termination — refer to HR</label>
+        <label><input type="radio" name="f-rec" value="Confirm / Retain"> Confirm / Retain</label>
+        <label><input type="radio" name="f-rec" value="Increment Recommended"> Increment Recommended</label>
+        <label><input type="radio" name="f-rec" value="Promotion Recommended"> Promotion Recommended</label>
+        <label><input type="radio" name="f-rec" value="PIP"> Performance Improvement Plan (PIP)</label>
+        <label><input type="radio" name="f-rec" value="Termination"> Contract Termination</label>
       </div>
     </div>
 
     <div class="sec"><div class="num">5</div><div class="lbl">Appraiser Confirmation</div></div>
     <div class="card grid2">
-      <div class="field"><label>Typed Signature (Appraiser) *</label><input type="text" id="f-sign" placeholder="Type your full name to sign"/></div>
+      <div class="field"><label>Typed Signature (Appraiser) *</label><input type="text" id="f-sign" placeholder="Type full name"/></div>
       <div class="field"><label>Date</label><input type="date" id="f-sign-date"/></div>
     </div>
 
     <div class="submit-row">
-      <div class="submit-note">Submissions are aggregated by Employee ID to support multi-appraiser evaluations.</div>
-      <button class="btn secondary" id="btn-reset">Clear form</button>
-      <button class="btn" id="btn-submit">Submit appraisal</button>
+      <button class="btn secondary" type="button" onclick="location.reload()">Clear form</button>
+      <button class="btn" id="btn-submit" type="button">Submit appraisal</button>
     </div>
   </div>
 
-  <!-- ========================= DASHBOARD PANEL ========================= -->
+  <!-- DASHBOARD PANEL -->
   <div class="panel" id="panel-dash">
     <div class="gate" id="dash-gate">
-      <div class="lock">&#128274;</div>
       <h3>HR / Management Access</h3>
-      <p>Enter the passcode to unlock consolidated appraisal metrics and multi-appraiser averages.</p>
-      <input type="password" id="gate-input" placeholder="Passcode" autocomplete="off" />
+      <p>Enter passcode to view metrics & qualitative manager feedback.</p>
+      <input type="password" id="gate-input" placeholder="Passcode" />
       <button class="btn" id="gate-submit">Unlock dashboard</button>
-      <div class="err" id="gate-err"></div>
+      <div id="gate-err" style="color:red; font-size:12px; margin-top:8px;"></div>
     </div>
 
     <div id="dash-authed" style="display:none;">
@@ -325,26 +247,103 @@
         <h3 style="font-family:'Space Grotesk', sans-serif; margin:0;">Consolidated Performance Database</h3>
         <div>
           <button class="btn secondary small" id="btn-refresh">Refresh Data</button>
-          <button class="btn secondary small" id="btn-lock">Lock View</button>
+          <button class="btn secondary small" id="btn-lock">Lock</button>
         </div>
       </div>
 
-      <div id="dash-content"></div>
+      <div id="dash-content"><p>Loading records from central database...</p></div>
     </div>
   </div>
 
-  <footer>AL AWAN ELECTRIC WORKS &amp; CONSTRUCTION CO. — PERFORMANCE MANAGEMENT SYSTEM</footer>
+  <footer>AL AWAN ELECTRIC WORKS &amp; CONSTRUCTION CO.</footer>
+</div>
+
+<!-- MODAL FOR DETAILED FEEDBACK & PDF EXPORT -->
+<div class="modal-overlay" id="feedback-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-emp-title">Detailed Feedback &amp; Review</h3>
+      <button class="close-modal" id="close-modal">&times;</button>
+    </div>
+    <div id="pdf-container">
+      <div id="modal-body-content"></div>
+    </div>
+    <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+      <button class="btn secondary" id="btn-close-modal">Close</button>
+      <button class="btn" id="btn-download-pdf">Download PDF Report</button>
+    </div>
+  </div>
 </div>
 
 <script>
 (function(){
-  // PASTE YOUR GOOGLE APP SCRIPT WEB APP URL HERE:
-  var SHEET_API_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE"; 
-  
+  // REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL:
+  var SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxr5GpEVHZn9000IKgL89mS7EBAep3hs96sG2vKLhxYj3pX5cPFHfrrbr4ykS96GZmcqQ/exec"; 
+
+  var COMPETENCIES = {
+    site: { title: "Site Staff", items: [{ key:"technical_execution", name:"Technical Execution" }, { key:"hse_compliance", name:"HSE Compliance" }, { key:"attendance", name:"Attendance" }, { key:"teamwork", name:"Teamwork" }, { key:"problem_solving", name:"Problem Solving" }, { key:"reporting_accuracy", name:"Reporting Accuracy" }] },
+    ho_technical: { title: "HO Technical", items: [{ key:"technical_expertise", name:"Technical Expertise" }, { key:"deliverable_quality", name:"Deliverable Quality" }, { key:"project_management", name:"Project Management" }, { key:"client_coordination", name:"Client Coordination" }, { key:"deadline_adherence", name:"Deadline Adherence" }, { key:"innovation", name:"Innovation" }] },
+    ho_support: { title: "HO Support", items: [{ key:"role_specific", name:"Role Specific" }, { key:"accuracy_detail", name:"Accuracy & Detail" }, { key:"policy_compliance", name:"Policy Compliance" }, { key:"communication", name:"Communication" }, { key:"initiative", name:"Initiative" }, { key:"confidentiality", name:"Confidentiality" }] }
+  };
+
   var DASH_PASSCODE = "AlAwan2026";
   var dashUnlocked = false;
+  var cachedGroupedData = {};
 
-  // Submit Handler -> Sends directly to Google Sheets Database
+  // Navigation
+  var tabBtns = document.querySelectorAll(".tab-btn");
+  tabBtns.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      tabBtns.forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("active"); });
+      document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+      if(btn.dataset.tab === "dash"){
+        if(dashUnlocked){ loadDashboard(); } else {
+          document.getElementById("dash-gate").style.display = "block";
+          document.getElementById("dash-authed").style.display = "none";
+        }
+      }
+    });
+  });
+
+  // Gate Security
+  document.getElementById("gate-submit").addEventListener("click", function(){
+    if(document.getElementById("gate-input").value === DASH_PASSCODE){
+      dashUnlocked = true;
+      document.getElementById("dash-gate").style.display = "none";
+      document.getElementById("dash-authed").style.display = "block";
+      loadDashboard();
+    } else { document.getElementById("gate-err").textContent = "Incorrect passcode."; }
+  });
+  document.getElementById("btn-lock").addEventListener("click", function(){
+    dashUnlocked = false;
+    document.getElementById("dash-gate").style.display = "block";
+    document.getElementById("dash-authed").style.display = "none";
+  });
+
+  // Dynamic Competencies Rendering
+  var compContainer = document.getElementById("comp-container");
+  document.getElementById("f-role").addEventListener("change", function(e){
+    var roleKey = e.target.value;
+    compContainer.innerHTML = "";
+    if(!roleKey) return;
+    var group = COMPETENCIES[roleKey];
+    var wrap = document.createElement("div"); wrap.className = "card";
+    var table = document.createElement("table"); table.className = "comp-table";
+    table.innerHTML = '<thead><tr><th>Competency</th><th class="score">1</th><th class="score">2</th><th class="score">3</th><th class="score">4</th><th class="score">5</th></tr></thead>';
+    var tbody = document.createElement("tbody");
+    group.items.forEach(function(item){
+      var tr = document.createElement("tr");
+      var html = '<td><div class="comp-name">'+item.name+'</div></td>';
+      [1,2,3,4,5].forEach(function(n){ html += '<td class="score"><input type="radio" name="score_'+item.key+'" value="'+n+'" required /></td>'; });
+      tr.innerHTML = html;
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody); wrap.appendChild(table); compContainer.appendChild(wrap);
+  });
+
+  // Submit to Google Sheets Central Database
   document.getElementById("btn-submit").addEventListener("click", function(){
     var empid = document.getElementById("f-empid").value.trim().toUpperCase();
     var name = document.getElementById("f-name").value.trim();
@@ -356,6 +355,16 @@
       alert("Please fill all required fields."); return;
     }
 
+    var group = COMPETENCIES[roleKey];
+    var scores = [];
+    if(group){
+      group.items.forEach(function(item){
+        var checked = document.querySelector('input[name="score_'+item.key+'"]:checked');
+        if(checked) scores.push(parseInt(checked.value, 10));
+      });
+    }
+
+    var avg = scores.length ? scores.reduce(function(a,b){ return a+b; }, 0) / scores.length : 3.0;
     var recEl = document.querySelector('input[name="f-rec"]:checked');
 
     var record = {
@@ -364,32 +373,136 @@
       employee: { empid: empid, name: name, designation: designation, department: document.getElementById("f-dept").value.trim() },
       appraiser: { name: appraiser, designation: document.getElementById("f-appraiser-desig").value.trim() },
       role_group: roleKey,
-      average_score: 4.0, // Calculated average score
+      average_score: Math.round(avg * 100) / 100,
       achievements: document.getElementById("f-achievements").value.trim(),
+      improvement: document.getElementById("f-improvement").value.trim(),
+      training: document.getElementById("f-training").value.trim(),
       recommendation: recEl ? recEl.value : "N/A"
     };
 
-    // Post data to Google Sheets API
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = "Submitting...";
+
     fetch(SHEET_API_URL, {
       method: "POST",
       body: JSON.stringify(record)
     })
-    .then(() => {
+    .then(function(){
       alert("Appraisal submitted successfully to Central HR Database!");
       location.reload();
     })
-    .catch(err => alert("Error saving submission: " + err));
+    .catch(function(err){
+      alert("Error saving to database: " + err);
+      btn.disabled = false;
+      btn.textContent = "Submit appraisal";
+    });
   });
 
-  // Load Central Dashboard Data
+  // Load All Submissions from Google Sheets API
   function loadDashboard(){
+    var container = document.getElementById("dash-content");
+    container.innerHTML = "<p>Fetching database entries...</p>";
+
     fetch(SHEET_API_URL)
-      .then(res => res.json())
-      .then(data => {
-        // Renders all global submissions received from all managers
-        renderDashboard(data);
+      .then(function(res){ return res.json(); })
+      .then(function(raw){
+        var grouped = {};
+        var totalScores = 0;
+        var multiCount = 0;
+
+        raw.forEach(function(item){
+          var id = item.employee.empid;
+          if(!grouped[id]){
+            grouped[id] = { empid: id, name: item.employee.name, designation: item.employee.designation, reviews: [] };
+          }
+          grouped[id].reviews.push(item);
+        });
+
+        cachedGroupedData = grouped;
+        var keys = Object.keys(grouped);
+
+        keys.forEach(function(id){
+          if(grouped[id].reviews.length > 1) multiCount++;
+          grouped[id].reviews.forEach(function(r){ totalScores += r.average_score; });
+        });
+
+        document.getElementById("stat-total").textContent = keys.length;
+        document.getElementById("stat-reviews").textContent = raw.length;
+        document.getElementById("stat-avg").textContent = raw.length ? (Math.round((totalScores / raw.length) * 100) / 100) : "–";
+        document.getElementById("stat-multi").textContent = multiCount;
+
+        if(!keys.length){ container.innerHTML = "<p>No submissions found in central database.</p>"; return; }
+
+        var html = '<table class="sub-table"><thead><tr><th>Staff ID</th><th>Employee</th><th>Appraisers</th><th>Combined Avg</th><th>Action</th></tr></thead><tbody>';
+        keys.forEach(function(id){
+          var g = grouped[id];
+          var totalAvg = g.reviews.reduce(function(a,b){ return a + parseFloat(b.average_score); }, 0) / g.reviews.length;
+          var appraiserNames = g.reviews.map(function(r){ return r.appraiser.name; }).join(", ");
+
+          html += '<tr>' +
+            '<td><b>' + g.empid + '</b></td>' +
+            '<td><b>' + g.name + '</b><br><small>' + g.designation + '</small></td>' +
+            '<td><small>' + appraiserNames + ' (' + g.reviews.length + ')</small></td>' +
+            '<td><b>' + (Math.round(totalAvg * 100) / 100) + ' / 5</b></td>' +
+            '<td><button class="btn small btn-view-fb" data-empid="' + g.empid + '">View Feedback &amp; PDF</button></td>' +
+          '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+        document.querySelectorAll(".btn-view-fb").forEach(function(b){
+          b.addEventListener("click", function(){ openFeedbackModal(b.dataset.empid, cachedGroupedData[b.dataset.empid]); });
+        });
+      })
+      .catch(function(err){
+        container.innerHTML = "<p style='color:red;'>Failed to load database. Please ensure your Google Apps Script URL is correct.</p>";
       });
   }
+
+  // Feedback Modal & PDF Export Logic
+  var modal = document.getElementById("feedback-modal");
+  var activeEmpId = "";
+
+  function openFeedbackModal(empid, group){
+    activeEmpId = empid;
+    document.getElementById("modal-emp-title").textContent = "Appraisal Summary: " + group.name + " (" + empid + ")";
+    var body = document.getElementById("modal-body-content");
+    
+    var html = '<div style="margin-bottom:16px;"><strong>Designation:</strong> ' + group.designation + '</div>';
+
+    group.reviews.forEach(function(r, idx){
+      html += '<div class="feedback-card">' +
+        '<h4>Appraiser #' + (idx+1) + ': ' + r.appraiser.name + ' (' + (r.appraiser.designation || "N/A") + ')</h4>' +
+        '<div class="fb-field"><b>Score Given:</b> ' + r.average_score + ' / 5</div>' +
+        '<div class="fb-field"><b>Recommendation:</b> ' + r.recommendation + '</div>' +
+        '<div class="fb-field"><b>Key Achievements:</b> ' + (r.achievements || "None entered") + '</div>' +
+        '<div class="fb-field"><b>Areas for Improvement:</b> ' + (r.improvement || "None entered") + '</div>' +
+        '<div class="fb-field"><b>Training Needs:</b> ' + (r.training || "None entered") + '</div>' +
+      '</div>';
+    });
+
+    body.innerHTML = html;
+    modal.classList.add("active");
+  }
+
+  document.getElementById("close-modal").addEventListener("click", function(){ modal.classList.remove("active"); });
+  document.getElementById("btn-close-modal").addEventListener("click", function(){ modal.classList.remove("active"); });
+
+  // PDF Generation Trigger
+  document.getElementById("btn-download-pdf").addEventListener("click", function(){
+    var element = document.getElementById("pdf-container");
+    var opt = {
+      margin:       10,
+      filename:     'Appraisal_Report_' + activeEmpId + '.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
+  });
+
+  document.getElementById("btn-refresh").addEventListener("click", loadDashboard);
 })();
 </script>
 </body>
